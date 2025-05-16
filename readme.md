@@ -4,4 +4,6 @@ This repository was created step by step by following **Professor Tsung Tai Yeh*
 Special thanks to the professor for making these learning resources publicly available.
 
 # Development Notes
-- [lab0: Environment Setup](https://hackmd.io/@0a2xfYPxSzGdcXv06JB8_Q/rkHdpYkZxe)
+- [Lab 0: Environment Setup](https://hackmd.io/@0a2xfYPxSzGdcXv06JB8_Q/rkHdpYkZxe)
+
+- [Lab 1: Hello World](https://hackmd.io/@0a2xfYPxSzGdcXv06JB8_Q/SJP2qXEbeg)
