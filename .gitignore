@@ -1,2 +1,5 @@
 slides/
 resourse/
+tools/
+build/
+*.img
