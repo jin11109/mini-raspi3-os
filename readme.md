@@ -7,3 +7,8 @@ Special thanks to the professor for making these learning resources publicly ava
 - [Lab 0: Environment Setup](https://hackmd.io/@0a2xfYPxSzGdcXv06JB8_Q/rkHdpYkZxe)
 
 - [Lab 1: Hello World](https://hackmd.io/@0a2xfYPxSzGdcXv06JB8_Q/SJP2qXEbeg)
+
+# Reference
+- [mini-arm-os](https://github.com/jserv/mini-arm-os/tree/master)
+- [raspi3-tutorial](https://github.com/bztsrc/raspi3-tutorial/tree/master)
+- [raspberry-pi-os](https://github.com/s-matyukevich/raspberry-pi-os)
