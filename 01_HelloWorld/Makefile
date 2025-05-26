@@ -2,9 +2,9 @@ CROSS_COMPILE ?= aarch64-none-elf-
 MODEL = raspi3b
 CC := $(CROSS_COMPILE)gcc
 
-COPS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only
-ASMOPS = -Iinclude
-QEMUOPS = -display none -d in_asm
+COPS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only -g -O0
+ASMOPS = -Iinclude -g -O0
+QEMUOPS = -nographic -serial null -serial mon:stdio
 
 BUILD_DIR = build
 SRC_DIR = src
@@ -13,6 +13,8 @@ all: kernel8.img
 
 qemu: kernel8.img
 	@qemu-system-aarch64 -M $(MODEL) -kernel kernel8.img $(QEMUOPS) 
+qemu-debug: clean kernel8.img
+	@qemu-system-aarch64 -M $(MODEL) -kernel kernel8.img $(QEMUOPS) -S -gdb tcp::1234
 
 clean:
 	rm -rf $(BUILD_DIR) *.img 
