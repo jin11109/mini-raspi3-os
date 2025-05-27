@@ -1,5 +1,6 @@
 #include <mini_uart.h>
 #include <shell.h>
+#include <string.h>
 
 void read_line(char *buf) {
     int pos = 0;
@@ -27,8 +28,12 @@ void read_line(char *buf) {
 }
 
 void execute_cmd(char *buf) {
-    if (buf[0] == 'h') {
-        uart_send_string("h : print this help menu\r\n");
+    if (strcmp(buf, "help") == 0) {
+        uart_send_string(
+            "help    : print this help menu\r\n"
+            "hello   : print Hello World!\r\n");
+    } else if (strcmp(buf, "hello") == 0) {
+        uart_send_string("Hello World!\r\n");
     }
 }
 
@@ -36,7 +41,7 @@ void shell() {
     char buf[MAX_BUF];
     while (1) {
         uart_send_string("\x1b[1;34mmini-raspi3-os$ \x1b[0m");
-        
+
         read_line(buf);
         execute_cmd(buf);
     }
