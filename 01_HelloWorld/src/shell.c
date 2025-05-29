@@ -1,6 +1,7 @@
 #include <mini_uart.h>
 #include <shell.h>
 #include <string.h>
+#include <power.h>
 
 void read_line(char *buf) {
     int pos = 0;
@@ -30,10 +31,16 @@ void read_line(char *buf) {
 void execute_cmd(char *buf) {
     if (strcmp(buf, "help") == 0) {
         uart_send_string(
-            "help    : print this help menu\r\n"
-            "hello   : print Hello World!\r\n");
+            "help    : Print this help menu.\r\n"
+            "hello   : Print Hello World!\r\n"
+            "reboot  : Reboot afetr 16 ticks.\r\n"
+            "cancel_reboot : Before watchdog time expire you canel reboot.\r\n");
     } else if (strcmp(buf, "hello") == 0) {
         uart_send_string("Hello World!\r\n");
+    } else if (strcmp(buf, "reboot") == 0) {
+        reboot(16);
+    } else if (strcmp(buf, "cancel_reboot") == 0) {
+        cancel_reboot();
     }
 }
 
