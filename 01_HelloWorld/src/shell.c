@@ -1,7 +1,7 @@
-#include <mini_uart.h>
-#include <shell.h>
-#include <string.h>
-#include <power.h>
+#include "mini_uart.h"
+#include "shell.h"
+#include "string.h"
+#include "power.h"
 
 void read_line(char *buf) {
     int pos = 0;

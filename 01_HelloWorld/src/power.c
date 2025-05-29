@@ -1,6 +1,6 @@
-#include <peripherals/power.h>
-#include <power.h>
-#include <utils.h>
+#include "peripherals/power.h"
+#include "power.h"
+#include "utils.h"
 
 void reboot(int tick) {
     put32(PM_WDOG, PM_PASSWORD | tick); // number of watchdog tick
