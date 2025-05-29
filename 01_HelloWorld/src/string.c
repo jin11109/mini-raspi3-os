@@ -1,4 +1,5 @@
 #include <string.h>
+#include <def.h>
 
 int strcmp(const char* str1, const char* str2) {
     /* TODO : This error handling is a temporarily way.*/
