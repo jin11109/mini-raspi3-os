@@ -34,6 +34,6 @@ OBJ_FILES += $(ASM_FILES:$(SRC_DIR)/%.S=$(BUILD_DIR)/%_s.o)
 DEP_FILES = $(OBJ_FILES:%.o=%.d)
 -include $(DEP_FILES)
 
-kernel8.img: $(SRC_DIR)/linker.ld $(OBJ_FILES)
-	$(CROSS_COMPILE)ld -T $(SRC_DIR)/linker.ld -o $(BUILD_DIR)/kernel8.elf  $(OBJ_FILES)
+kernel8.img: linker.ld $(OBJ_FILES)
+	$(CROSS_COMPILE)ld -T linker.ld -o $(BUILD_DIR)/kernel8.elf  $(OBJ_FILES)
 	$(CROSS_COMPILE)objcopy $(BUILD_DIR)/kernel8.elf -O binary kernel8.img
