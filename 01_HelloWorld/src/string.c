@@ -71,7 +71,22 @@ void itoa_dec(int num, char* buf) {
     strrev(buf);
 }
 
-void itoa_hex(unsigned int num, char* buf) {
+void utoa_dec(unsigned int num, char* buf) {
+    /* TODO : This error handling should be implemented.*/
+    if (buf == NULL) {
+    }
+
+    int pos = 0;
+    do {
+        buf[pos++] = num % 10 + '0';
+        num /= 10;
+    } while (num > 0);
+
+    buf[pos] = '\0';
+    strrev(buf);
+}
+
+void utoa_hex(unsigned int num, char* buf) {
     /* TODO : This error handling should be implemented.*/
     if (buf == NULL) {
     }

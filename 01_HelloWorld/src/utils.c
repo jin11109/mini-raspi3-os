@@ -34,19 +34,25 @@ void printf(const char *fmt, ...) {
             switch (*fmt) {
                 case 'd':
                     if (arg_idx < 7) {
-                        itoa_dec(args[arg_idx++], buf);
+                        itoa_dec((int)args[arg_idx++], buf);
                         uart_send_string(buf);
                     }
                     break;
                 case 'x':
                     if (arg_idx < 7) {
-                        itoa_hex(args[arg_idx++], buf);
+                        utoa_hex((unsigned int)args[arg_idx++], buf);
                         uart_send_string(buf);
                     }
                     break;
                 case 'c':
                     if (arg_idx < 7) {
                         uart_send((char)args[arg_idx++]);
+                    }
+                    break;
+                case 'u':
+                    if (arg_idx < 7) {
+                        utoa_dec((unsigned int)args[arg_idx++], buf);
+                        uart_send_string(buf);
                     }
                     break;
                 case '%':

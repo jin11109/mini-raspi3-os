@@ -1,5 +1,7 @@
 #include "shell.h"
 
+#include "mbox.h"
+#include "mini_uart.h"
 #include "power.h"
 #include "string.h"
 #include "utils.h"
@@ -36,13 +38,16 @@ void execute_cmd(char *buf) {
             "hello   : Print Hello World!\r\n"
             "reboot  : Reboot afetr 16 ticks.\r\n"
             "cancel_reboot : Before watchdog time expire you canel "
-            "reboot.\r\n");
+            "reboot.\r\n"
+            "lshw    : List hardware information\r\n");
     } else if (strcmp(buf, "hello") == 0) {
         printf("Hello World!\r\n");
     } else if (strcmp(buf, "reboot") == 0) {
         reboot(16);
     } else if (strcmp(buf, "cancel_reboot") == 0) {
         cancel_reboot();
+    } else if (strcmp(buf, "lshw") == 0) {
+        get_hardware_info();
     }
 }
 
