@@ -84,8 +84,6 @@ void itoa_hex(unsigned int num, char* buf) {
         num /= 16;
     } while (num > 0);
 
-    buf[pos++] = 'x';
-    buf[pos++] = '0';
     buf[pos] = '\0';
     strrev(buf);
 }
