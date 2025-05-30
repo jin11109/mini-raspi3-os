@@ -1,5 +1,6 @@
-#include <string.h>
-#include <def.h>
+#include "string.h"
+
+#include "def.h"
 
 int strcmp(const char* str1, const char* str2) {
     /* TODO : This error handling is a temporarily way.*/
@@ -19,4 +20,72 @@ int strcmp(const char* str1, const char* str2) {
     } else {
         return -1;
     }
+}
+
+size_t strlen(char* str) {
+    /* TODO : This error handling should be implemented. */
+    if (str == NULL) {
+    }
+
+    size_t len = 0;
+    while (*str != '\0') {
+        len++;
+        str++;
+    }
+    return len;
+}
+
+void strrev(char* str) {
+    if (str == NULL) {
+        return;
+    }
+
+    size_t len = strlen(str);
+    for (size_t i = 0; i < len / 2; i++) {
+        char temp = str[i];
+        str[i] = str[len - i - 1];
+        str[len - i - 1] = temp;
+    }
+}
+
+void itoa_dec(int num, char* buf) {
+    /* TODO : This error handling should be implemented.*/
+    if (buf == NULL) {
+    }
+
+    int pos = 0;
+    int sign = 0;
+    if (num < 0) {
+        sign = -1;
+        num = -num;
+    }
+    do {
+        buf[pos++] = num % 10 + '0';
+        num /= 10;
+    } while (num > 0);
+
+    if (sign < 0) {
+        buf[pos++] = '-';
+    }
+    buf[pos] = '\0';
+    strrev(buf);
+}
+
+void itoa_hex(unsigned int num, char* buf) {
+    /* TODO : This error handling should be implemented.*/
+    if (buf == NULL) {
+    }
+
+    const char* hex = "0123456789abcdef";
+    int pos = 0;
+
+    do {
+        buf[pos++] = hex[num % 16];
+        num /= 16;
+    } while (num > 0);
+
+    buf[pos++] = 'x';
+    buf[pos++] = '0';
+    buf[pos] = '\0';
+    strrev(buf);
 }
