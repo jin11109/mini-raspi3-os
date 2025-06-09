@@ -13,7 +13,7 @@
     - `lshw`: Gets hardware information via **mailbox**.
 
 ## demo (in Raspi3b+):
-- help:
+- `help`:
 ```
 mini-raspi3-os$ help
 help    : Print this help menu.
@@ -22,12 +22,12 @@ reboot  : Reboot afetr 16 ticks.
 cancel_reboot : Before watchdog time expire you canel reboot.
 lshw    : List hardware information
 ```
-- hello:
+- `hello`:
 ```
 mini-raspi3-os$ hello
 Hello World!
 ```
-- lshw:
+- `lshw`:
 ```
 mini-raspi3-os$ lshw
 Firmware Version: 0x68248b9e
