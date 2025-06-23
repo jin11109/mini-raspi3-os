@@ -4,22 +4,17 @@ This repository was created step by step by following **Professor Tsung Tai Yeh*
 Special thanks to the professor for making these learning resources publicly available.
 
 # Quick Start
-1. Enter any lesson directory and set up the environment:
-    ```bash
-    # For example, in 01_HelloWorld/
-    $ . ../env.sh
-    ```
-2. Use the Makefile to build `kernel8.img`:
-    ```bash
-    $ make
-    ```
-    Or build `kernel8.img` and run it in QEMU:
-    ```bash
-    $ make qemu
-    ```
+Use the Makefile to build `kernel8.img`:
+```bash
+$ make
+```
+Or build `kernel8.img` and run it in QEMU:
+```bash
+$ make qemu
+```
 ## Debug way
 After entering a lesson directory and setting up the environment, use the following command to start debugging with QEMU.  
-**Warning**: This command will first remove `./build/*` and `kernel8.img`.
+**Warning**: This command will first execute `make clean` automatically.
 ```bash
 $ make qemu-debug
 ```

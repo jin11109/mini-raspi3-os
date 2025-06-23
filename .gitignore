@@ -3,3 +3,4 @@ resourse/
 tools/
 build/
 *.img
+.env

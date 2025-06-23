@@ -6,5 +6,6 @@ extern void put32(unsigned long, unsigned int);
 extern unsigned int get32(unsigned long);
 
 void printf(const char* fmt, ...);
+char getchar();
 
 #endif /*_BOOT_H */

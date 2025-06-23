@@ -1,6 +1,6 @@
 #include "mm.h"
 
-.section ".text.boot"
+.section ".bootloader.entry"
 
 .globl _start
 _start:
@@ -13,11 +13,16 @@ proc_hang:
     b proc_hang
 
 master:
-    adr x0, bss_begin
-    adr x1, bss_end
+    adr x0, __bootloader_bss_start
+    adr x1, __bootloader_bss_end
+    sub x1, x1, x0
+    bl memzero
+
+    adr x0, __kernel_bss_start
+    adr x1, __kernel_bss_end
     sub x1, x1, x0
     bl memzero
 
     mov sp, #LOW_MEMORY
-    bl kernel_main
+    bl bootloader_main
     b proc_hang // should never come here

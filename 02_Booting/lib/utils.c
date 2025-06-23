@@ -69,3 +69,7 @@ void printf(const char *fmt, ...) {
         fmt++;
     }
 }
+
+char getchar() {
+    return uart_recv();
+}

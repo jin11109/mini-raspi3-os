@@ -1,39 +1,44 @@
+-include ../.env
+export PATH := $(CROSS_COMPILER_PATH):$(PATH)
+
 CROSS_COMPILE ?= aarch64-none-elf-
 MODEL = raspi3b
-CC := $(CROSS_COMPILE)gcc
+LD := $(CROSS_COMPILE)ld
+OBJCOPY := $(CROSS_COMPILE)objcopy
 
-COPS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only -g -O0
-ASMOPS = -Iinclude -g -O0
-QEMUOPS = -nographic -serial null -serial mon:stdio
+QEMUOPS = -cpu cortex-a53 -nographic -serial null -serial /dev/pts/5
+# tcp::1234,server,nowait
+BUILD_DIR = ./build
 
-BUILD_DIR = build
-SRC_DIR = src
+BOOTLOADER_OBJS = $(wildcard $(BUILD_DIR)/bootloader/*.o)
+KERNEL_OBJS = $(wildcard $(BUILD_DIR)/kernel/*.o)
+COMMAND_LIB := $(BUILD_DIR)/lib/libcommand.a
 
 all: kernel8.img
+kernel-pure: kernel8_pure.img
+
+build-bootloader:
+	$(MAKE) -C bootloader
+build-kernel:
+	$(MAKE) -C kernel
+build-lib:
+	$(MAKE) -C lib
+
+kernel8.img: linker.ld build-bootloader build-kernel build-lib
+	$(LD) -T linker.ld -o $(BUILD_DIR)/kernel8.elf --whole-archive $(COMMAND_LIB) $(KERNEL_OBJS) $(BOOTLOADER_OBJS)
+	$(OBJCOPY) $(BUILD_DIR)/kernel8.elf -O binary kernel8.img
+
+# Build the kernel without bootloader
+kernel8_pure.img: ./kernel/linker.ld build-kernel build-lib
+	$(LD) -T ./kernel/linker.ld -o $(BUILD_DIR)/kernel8_pure.elf --whole-archive $(COMMAND_LIB) $(KERNEL_OBJS)
+	$(OBJCOPY) $(BUILD_DIR)/kernel8_pure.elf -O binary kernel8_pure.img
 
 qemu: kernel8.img
 	@qemu-system-aarch64 -M $(MODEL) -kernel kernel8.img $(QEMUOPS) 
-qemu-debug: clean kernel8.img
+qemu-debug: kernel8.img
 	@qemu-system-aarch64 -M $(MODEL) -kernel kernel8.img $(QEMUOPS) -S -gdb tcp::1234
 
 clean:
-	rm -rf $(BUILD_DIR) *.img 
-
-$(BUILD_DIR)/%_c.o: $(SRC_DIR)/%.c
-	mkdir -p $(@D)
-	$(CC) $(COPS) -MMD -c $< -o $@
-
-$(BUILD_DIR)/%_s.o: $(SRC_DIR)/%.S
-	$(CC) $(ASMOPS) -MMD -c $< -o $@
-
-C_FILES = $(wildcard $(SRC_DIR)/*.c)
-ASM_FILES = $(wildcard $(SRC_DIR)/*.S)
-OBJ_FILES = $(C_FILES:$(SRC_DIR)/%.c=$(BUILD_DIR)/%_c.o)
-OBJ_FILES += $(ASM_FILES:$(SRC_DIR)/%.S=$(BUILD_DIR)/%_s.o)
-
-DEP_FILES = $(OBJ_FILES:%.o=%.d)
--include $(DEP_FILES)
-
-kernel8.img: linker.ld $(OBJ_FILES)
-	$(CROSS_COMPILE)ld -T linker.ld -o $(BUILD_DIR)/kernel8.elf  $(OBJ_FILES)
-	$(CROSS_COMPILE)objcopy $(BUILD_DIR)/kernel8.elf -O binary kernel8.img
+	rm -rf $(BUILD_DIR) *.img
+	$(MAKE) -C bootloader clean
+	$(MAKE) -C kernel clean
