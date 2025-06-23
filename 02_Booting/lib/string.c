@@ -101,5 +101,4 @@ void utoa_hex(unsigned int num, char* buf) {
 
     buf[pos] = '\0';
     strrev(buf);
-    ;
 }
