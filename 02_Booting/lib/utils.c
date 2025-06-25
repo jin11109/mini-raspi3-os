@@ -31,35 +31,54 @@ void printf(const char *fmt, ...) {
     while (*fmt) {
         if (*fmt == '%') {
             fmt++;
+            int is_long = 0;
+
+            if (*fmt == 'l') {
+                is_long = 1;
+                fmt++;
+            }
+
+            if (arg_idx >= 7) {
+                /* TODO : This error handling should be implemented. */
+                return;
+            }
+
             switch (*fmt) {
                 case 'd':
-                    if (arg_idx < 7) {
-                        itoa_dec((int)args[arg_idx++], buf);
-                        uart_send_string(buf);
-                    }
+                    if (is_long)
+                        itoa_dec64((int64_t)args[arg_idx++], buf);
+                    else
+                        itoa_dec((int32_t)args[arg_idx++], buf);
+                    uart_send_string(buf);
                     break;
-                case 'x':
-                    if (arg_idx < 7) {
-                        utoa_hex((unsigned int)args[arg_idx++], buf);
-                        uart_send_string(buf);
-                    }
-                    break;
-                case 'c':
-                    if (arg_idx < 7) {
-                        uart_send((char)args[arg_idx++]);
-                    }
-                    break;
+
                 case 'u':
-                    if (arg_idx < 7) {
-                        utoa_dec((unsigned int)args[arg_idx++], buf);
-                        uart_send_string(buf);
-                    }
+                    if (is_long)
+                        utoa_dec64((uint64_t)args[arg_idx++], buf);
+                    else
+                        utoa_dec((uint32_t)args[arg_idx++], buf);
+                    uart_send_string(buf);
                     break;
+
+                case 'x':
+                    if (is_long)
+                        utoa_hex64((uint64_t)args[arg_idx++], buf);
+                    else
+                        utoa_hex((uint32_t)args[arg_idx++], buf);
+                    uart_send_string(buf);
+                    break;
+
+                case 'c':
+                    uart_send((char)args[arg_idx++]);
+                    break;
+
                 case '%':
                     uart_send('%');
                     break;
+
                 default:
                     uart_send('%');
+                    if (is_long) uart_send('l');
                     uart_send(*fmt);
                     break;
             }
@@ -70,6 +89,4 @@ void printf(const char *fmt, ...) {
     }
 }
 
-char getchar() {
-    return uart_recv();
-}
+char getchar() { return uart_recv(); }

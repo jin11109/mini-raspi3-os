@@ -4,11 +4,12 @@
 
 ENTRY(kernel_main)
 
-SECTIONS {
-	/* kernel section */
-	. = 0x90000;
-    __kernel_start = .;
+MEMORY {
+    KERNEL (rwx) : ORIGIN = 0xa0000, LENGTH = 1M
+}
 
+SECTIONS {
+	 /* kernel section */
     .kernel : {
         __kernel_start = .;
 		KEEP(*kernel/*.o(.kernel.entry))
@@ -23,7 +24,17 @@ SECTIONS {
         *kernel/*.o(.bss*)
         *(.bss*)	
 		__kernel_bss_end = .;
-    }
+
+        . = ALIGN(0x8);
+        __kernel_heap_start = .;
+        . = . + 48K;
+        __kernel_heap_end = .;
+
+        . = ORIGIN(KERNEL) + LENGTH(KERNEL) - 16K;
+        __kernel_stack_bottom = .;
+        . = . + 16K;
+        __kernel_stack_top = .;
+    } > KERNEL
 
     __kernel_end = .;
 }

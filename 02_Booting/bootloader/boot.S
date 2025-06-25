@@ -10,6 +10,7 @@ _start:
     b proc_hang
 
 proc_hang:
+    wfe
     b proc_hang
 
 master:
@@ -18,11 +19,7 @@ master:
     sub x1, x1, x0
     bl memzero
 
-    adr x0, __kernel_bss_start
-    adr x1, __kernel_bss_end
-    sub x1, x1, x0
-    bl memzero
-
-    mov sp, #LOW_MEMORY
+    ldr x0, =__bootloader_stack_top
+    mov sp, x0
     bl bootloader_main
     b proc_hang // should never come here

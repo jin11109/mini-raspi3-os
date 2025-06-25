@@ -17,6 +17,8 @@ SRC_S_FILES := $(wildcard $(SRC_DIR)/*.S)
 OBJ_FILES := $(SRC_C_FILES:$(SRC_DIR)/%.c=$(BUILD_DIR)/%_c.o)
 OBJ_FILES += $(SRC_S_FILES:$(SRC_DIR)/%.S=$(BUILD_DIR)/%_s.o)
 
+all: $(OBJ_FILES)
+
 $(BUILD_DIR)/%_c.o: $(SRC_DIR)/%.c
 	mkdir -p $(@D)
 	$(CC) $(COPS) -MMD -c $< -o $@
@@ -27,8 +29,6 @@ $(BUILD_DIR)/%_s.o: $(SRC_DIR)/%.S
 
 DEP_FILES = $(OBJ_FILES:%.o=%.d)
 -include $(DEP_FILES)
-
-all: $(OBJ_FILES)
 
 clean:
 	rm -rf $(BUILD_DIR)

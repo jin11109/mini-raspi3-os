@@ -6,13 +6,9 @@
 
 ENTRY(_start)
 
-/** 
- * In order to limit the length of bootloader section. 
- * 0x80000 - 0x60000 = 128K
- */
 MEMORY {
-    BOOTLOADER (rwx) : ORIGIN = 0x80000, LENGTH = 64K
-    KERNEL (rwx) : ORIGIN = 0x90000, LENGTH = 1M
+    BOOTLOADER (rwx) : ORIGIN = 0x80000, LENGTH = 128K
+    KERNEL (rwx) : ORIGIN = 0xa0000, LENGTH = 1M
 }
 
 SECTIONS {
@@ -26,6 +22,16 @@ SECTIONS {
 		__bootloader_bss_start = .;
         *bootloader/*.o(.bss*)
 		__bootloader_bss_end = .;
+
+        . = ALIGN(0x8);
+        __bootloader_heap_start = .;
+        . = . + 48K;
+        __bootloader_heap_end = .;
+
+        . = ORIGIN(BOOTLOADER) + LENGTH(BOOTLOADER) - 16K;
+        __bootloader_stack_bottom = .;
+        . = . + 16K;
+        __bootloader_stack_top = .;
     } > BOOTLOADER
 
     /* Kernel Section */
@@ -44,6 +50,16 @@ SECTIONS {
         *kernel/*.o(.bss*)
         *(.bss*)	
 		__kernel_bss_end = .;
+
+        . = ALIGN(0x8);
+        __kernel_heap_start = .;
+        . = . + 48K;
+        __kernel_heap_end = .;
+
+        . = ORIGIN(KERNEL) + LENGTH(KERNEL) - 16K;
+        __kernel_stack_bottom = .;
+        . = . + 16K;
+        __kernel_stack_top = .;
     } > KERNEL
 
     __kernel_end = .;

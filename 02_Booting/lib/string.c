@@ -48,7 +48,7 @@ void strrev(char* str) {
     }
 }
 
-void itoa_dec(int num, char* buf) {
+void itoa_dec(int32_t num, char* buf) {
     /* TODO : This error handling should be implemented.*/
     if (buf == NULL) {
     }
@@ -71,7 +71,30 @@ void itoa_dec(int num, char* buf) {
     strrev(buf);
 }
 
-void utoa_dec(unsigned int num, char* buf) {
+void itoa_dec64(int64_t num, char* buf) {
+    /* TODO : This error handling should be implemented.*/
+    if (buf == NULL) {
+    }
+
+    int pos = 0;
+    int sign = 0;
+    if (num < 0) {
+        sign = -1;
+        num = -num;
+    }
+    do {
+        buf[pos++] = num % 10 + '0';
+        num /= 10;
+    } while (num > 0);
+
+    if (sign < 0) {
+        buf[pos++] = '-';
+    }
+    buf[pos] = '\0';
+    strrev(buf);
+}
+
+void utoa_dec(uint32_t num, char* buf) {
     /* TODO : This error handling should be implemented.*/
     if (buf == NULL) {
     }
@@ -86,7 +109,39 @@ void utoa_dec(unsigned int num, char* buf) {
     strrev(buf);
 }
 
-void utoa_hex(unsigned int num, char* buf) {
+void utoa_dec64(uint64_t num, char* buf) {
+    /* TODO : This error handling should be implemented.*/
+    if (buf == NULL) {
+    }
+
+    int pos = 0;
+    do {
+        buf[pos++] = num % 10 + '0';
+        num /= 10;
+    } while (num > 0);
+
+    buf[pos] = '\0';
+    strrev(buf);
+}
+
+void utoa_hex(uint32_t num, char* buf) {
+    /* TODO : This error handling should be implemented.*/
+    if (buf == NULL) {
+    }
+
+    const char* hex = "0123456789abcdef";
+    int pos = 0;
+
+    do {
+        buf[pos++] = hex[num % 16];
+        num /= 16;
+    } while (num > 0);
+
+    buf[pos] = '\0';
+    strrev(buf);
+}
+
+void utoa_hex64(uint64_t num, char* buf) {
     /* TODO : This error handling should be implemented.*/
     if (buf == NULL) {
     }
