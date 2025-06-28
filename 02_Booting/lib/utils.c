@@ -72,6 +72,10 @@ void printf(const char *fmt, ...) {
                     uart_send((char)args[arg_idx++]);
                     break;
 
+                case 's':
+                    uart_send_string((char *)args[arg_idx++]);
+                    break;
+
                 case '%':
                     uart_send('%');
                     break;

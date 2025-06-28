@@ -1,5 +1,6 @@
 #include "peripherals/mini_uart.h"
 
+#include "mini_uart.h"
 #include "peripherals/gpio.h"
 #include "utils.h"
 
@@ -50,4 +51,17 @@ void uart_init(void) {
     put32(AUX_MU_BAUD_REG, 270); // Set baud rate to 115200
 
     put32(AUX_MU_CNTL_REG, 3); // Finally, enable transmitter and receiver
+
+    // Flush RX FIFO after enabling receiver
+    uart_flush_send();
+    uart_flush_recv();
 }
+
+void uart_flush_recv(void) {
+    for (int i = 0; i < 16; i++) {
+        if (get32(AUX_MU_LSR_REG) & 0x01) {
+            get32(AUX_MU_IO_REG);
+        }
+    }
+}
+void uart_flush_send(void) { while (!(get32(AUX_MU_LSR_REG) & (1 << 6))); }

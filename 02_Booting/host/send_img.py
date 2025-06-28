@@ -71,9 +71,9 @@ def main():
         response_message = tty.readline()
 
         if response == ACK:
-            print("CRC verified by client: OK")
+            print("CRC verified by client: \033[32mOK\033[0m")
         elif response == NACK:
-            print("CRC mismatch on client side")
+            print("CRC mismatch on client side: \033[31mERROR\033[0m")
         else:
             print(f"No response or unknown response {response}")
         print(f'Client responses message: {response_message}')

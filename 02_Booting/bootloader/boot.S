@@ -1,6 +1,6 @@
-#include "mm.h"
-
 .section ".bootloader.entry"
+.extern bootloader_main
+.extern memzero
 
 .globl _start
 _start:
@@ -14,12 +14,13 @@ proc_hang:
     b proc_hang
 
 master:
+    ldr x0, =__bootloader_stack_top
+    mov sp, x0
+
     adr x0, __bootloader_bss_start
     adr x1, __bootloader_bss_end
     sub x1, x1, x0
     bl memzero
 
-    ldr x0, =__bootloader_stack_top
-    mov sp, x0
     bl bootloader_main
     b proc_hang // should never come here

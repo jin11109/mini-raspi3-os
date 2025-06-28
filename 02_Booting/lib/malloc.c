@@ -10,8 +10,8 @@ typedef struct mblock {
 
 } mblock_t; // 16 bytes
 
-char* free_ptr;
-char is_init_malloc = 0;
+static char* free_ptr;
+static char is_init_malloc = 0;
 
 size_t align(size_t s, size_t alignment) {
     if (s == 0) return 0;
@@ -23,7 +23,7 @@ void init_malloc() { free_ptr = &__kernel_heap_start; }
 
 void* malloc(size_t size) {
     if (!is_init_malloc) {
-        init_bmalloc();
+        init_malloc();
         is_init_malloc = 1;
     }
 

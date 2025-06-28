@@ -1,3 +1,4 @@
 kernel_old=1
 disable_commandline_tags=1
 core_freq=250
+initramfs initramfs.cpio 0x20000000

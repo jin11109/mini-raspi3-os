@@ -10,10 +10,10 @@
 
 #define LOW_MEMORY (2 * SECTION_SIZE)
 
-#ifndef __ASSEMBLER__
+#include "def.h"
 
-void memzero(unsigned long src, unsigned long n);
-
-#endif
+void memzero(void* src, size_t n);
+int memcmp(const void* s1, const void* s2, size_t n);
+void memcpy(const void* src, const void* dst, size_t n);
 
 #endif /*_MM_H */
