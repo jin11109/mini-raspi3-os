@@ -19,11 +19,11 @@ int memcmp(const void *s1, const void *s2, size_t n) {
     return 0;
 }
 
-void memcpy(const void *src, void *dst, size_t n) {
-    const uint8_t *p1 = (const uint8_t *)src;
-    uint8_t *p2 = (uint8_t *)dst;
+void memcpy(void *dst, const void *src, size_t n) {
+    const uint8_t *src_p = (const uint8_t *)src;
+    uint8_t *dst_p = (uint8_t *)dst;
 
     for (size_t i = 0; i < n; i++) {
-        p2[i] = p1[i];
+        dst_p[i] = src_p[i];
     }
 }

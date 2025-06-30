@@ -14,6 +14,6 @@
 
 void memzero(void* src, size_t n);
 int memcmp(const void* s1, const void* s2, size_t n);
-void memcpy(const void* src, const void* dst, size_t n);
+void memcpy(void *dst, const void *src, size_t n);
 
 #endif /*_MM_H */
