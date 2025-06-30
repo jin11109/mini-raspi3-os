@@ -20,6 +20,12 @@ SECTIONS {
         *kernel/*.o(.data*)
 		*(.data*)
         . = ALIGN(0x8);
+
+        . = ALIGN(8);
+        __command_start = .;
+        KEEP(*(.command_table))
+        __command_end = .;
+
 		__kernel_bss_start = .;
         *kernel/*.o(.bss*)
         *(.bss*)	

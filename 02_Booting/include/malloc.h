@@ -4,5 +4,6 @@
 #include "def.h"
 
 void* malloc(size_t size);
+void free(void* addr);
 
 #endif /*_MALLOC_H*/

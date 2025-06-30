@@ -1,5 +1,6 @@
 #include "cpio.h"
 
+#include "command_registry.h"
 #include "def.h"
 #include "mm.h"
 #include "string.h"
@@ -41,3 +42,9 @@ void parse_cpio(const char *cpio_base) {
         ptr = (const char *)ALIGN((uintptr_t)(file_data + filesize), 4);
     }
 }
+
+void cmd_ls(int argc, char **argv) { parse_cpio((const char *)(0x20000000)); }
+COMMAND_DEFINE("ls", cmd_ls);
+
+void cmd_cat(int argc, char **argv) {}
+COMMAND_DEFINE("cat", cmd_cat);

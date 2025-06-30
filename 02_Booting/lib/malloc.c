@@ -43,3 +43,5 @@ void* malloc(size_t size) {
 
     return (void*)new_free_ptr;
 }
+
+void free(void* addr) {}

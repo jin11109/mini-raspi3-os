@@ -1,5 +1,6 @@
 #include "peripherals/mbox.h"
 
+#include "command_registry.h"
 #include "def.h"
 #include "mbox.h"
 #include "string.h"
@@ -67,13 +68,15 @@ void get_hardware_info() {
     if (mailbox_call(mailbox, MAILBOX_PROPERTY_CHANNEL)) {
         printf("Firmware Version: 0x%x\r\n", mailbox[5]);
         printf("Board Revision: 0x%x\r\n", mailbox[9]);
-        printf("MAC Address: %x:%x:%x:%x:%x:%x\r\n",
-               (mailbox[13] >> 0) & 0xff, (mailbox[13] >> 8) & 0xff,
-               (mailbox[13] >> 16) & 0xff, (mailbox[13] >> 24) & 0xff,
-               (mailbox[14] >> 0) & 0xff, (mailbox[14] >> 8) & 0xff);
+        printf("MAC Address: %x:%x:%x:%x:%x:%x\r\n", (mailbox[13] >> 0) & 0xff,
+               (mailbox[13] >> 8) & 0xff, (mailbox[13] >> 16) & 0xff,
+               (mailbox[13] >> 24) & 0xff, (mailbox[14] >> 0) & 0xff,
+               (mailbox[14] >> 8) & 0xff);
 
-        printf("ARM Memory: base=0x%x, size=0x%x\r\n", mailbox[17], mailbox[18]);
-        printf("VC Memory : base=0x%x, size=0x%x\r\n", mailbox[21], mailbox[22]);
+        printf("ARM Memory: base=0x%x, size=0x%x\r\n", mailbox[17],
+               mailbox[18]);
+        printf("VC Memory : base=0x%x, size=0x%x\r\n", mailbox[21],
+               mailbox[22]);
         printf("CPU Clock : %u Hz\r\n", mailbox[26]);
         printf("CPU Temp  : %u.%u °C\r\n", mailbox[30] / 1000,
                (mailbox[30] % 1000) / 100); // millidegree
@@ -83,7 +86,7 @@ void get_hardware_info() {
     }
 }
 
-int mailbox_call(unsigned int *mailbox, unsigned int channel) {
+int mailbox_call(unsigned int* mailbox, unsigned int channel) {
     // Combine the message address (upper 28 bits) with channel number (lower 4
     // bits)
     uint32_t addr = ((uint32_t)(uintptr_t)mailbox) & ~0xF;
@@ -105,3 +108,6 @@ int mailbox_call(unsigned int *mailbox, unsigned int channel) {
         }
     }
 }
+
+void cmd_lshw(int argc, char** argv) { get_hardware_info(); }
+COMMAND_DEFINE("lshw", get_hardware_info);

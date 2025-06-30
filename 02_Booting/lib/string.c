@@ -1,6 +1,7 @@
 #include "string.h"
 
 #include "def.h"
+#include "malloc.h"
 
 int strcmp(const char* str1, const char* str2) {
     /* TODO : This error handling is a temporarily way.*/
@@ -25,6 +26,7 @@ int strcmp(const char* str1, const char* str2) {
 size_t strlen(char* str) {
     /* TODO : This error handling should be implemented. */
     if (str == NULL) {
+        return 0;
     }
 
     size_t len = 0;
@@ -46,6 +48,50 @@ void strrev(char* str) {
         str[i] = str[len - i - 1];
         str[len - i - 1] = temp;
     }
+}
+
+void strncpy(char* dst, const char* src, size_t len) {
+    for (int i = 0; i < len; i++) {
+        dst[i] = src[i];
+    }
+}
+
+size_t split_inplace(char** buf, char* str, char delim, size_t max_substr) {
+    size_t count = 0;
+    int8_t in_token = 0;
+
+    while (*str) {
+        if (*str != delim) {
+            if (!in_token) {
+                if (count < max_substr) buf[count++] = str;
+                in_token = 1;
+            }
+        } else {
+            *str = '\0';
+            in_token = 0;
+        }
+        str++;
+    }
+    return count;
+}
+
+/* Count number of substring splited by delimiter */
+size_t count_substr(const char* str, char delim, size_t len) {
+    size_t count = 0;
+    int8_t in_substr = 0;
+
+    while (len--) {
+        if (*str != delim) {
+            if (!in_substr) {
+                count++;
+                in_substr = 1;
+            }
+        } else {
+            in_substr = 0;
+        }
+        str++;
+    }
+    return count;
 }
 
 void itoa_dec(int32_t num, char* buf) {
@@ -178,7 +224,6 @@ int32_t atoi_dec(const char* str, size_t len) {
         result = result * 10 + (*str - '0');
         str++;
     }
-
 
     return negative ? -result : result;
 }

@@ -45,6 +45,12 @@ SECTIONS {
         *(.rodata*)
         *kernel/*.o(.data*)
 		*(.data*)
+
+        . = ALIGN(8);
+        __command_start = .;
+        KEEP(*(.command_table))
+        __command_end = .;
+
         . = ALIGN(0x8);
 		__kernel_bss_start = .;
         *kernel/*.o(.bss*)
