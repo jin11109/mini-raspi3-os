@@ -22,10 +22,17 @@ struct cpio_newc_header {
         char c_check[8];
 };
 
+typedef struct {
+    const char *name;
+    const void *data;
+    uint32_t data_size;
+} cpio_entry_t;
+
 #define CPIO_FIELD_OFFSET(field) \
     ((size_t)&(((struct cpio_newc_header *)0)->field))
 #define CPIO_HEADER_SIZE sizeof(struct cpio_newc_header)
 
 void parse_cpio(const char *cpio_base);
+void init_cpio(const char *cpio_base);
 
 #endif /* _CPIO_H */

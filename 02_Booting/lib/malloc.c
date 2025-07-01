@@ -1,6 +1,7 @@
 #include "malloc.h"
 
 #include "def.h"
+#include "mm.h"
 
 extern char __kernel_heap_start, __kernel_heap_end;
 
@@ -44,4 +45,14 @@ void* malloc(size_t size) {
     return (void*)new_free_ptr;
 }
 
+/* TODO: Implement this function */
+void* realloc(void* ptr, size_t new_size) {
+    void* new_ptr = malloc(new_size);
+    size_t old_size = ((mblock_t*)(ptr))->size;
+    memcpy(new_ptr, ptr, old_size);
+    free(ptr);
+    return new_ptr;
+}
+
+/* TODO: Implement this function */
 void free(void* addr) {}

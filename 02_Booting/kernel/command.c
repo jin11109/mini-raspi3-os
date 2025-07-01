@@ -12,6 +12,7 @@ COMMAND_DEFINE("echo", cmd_echo);
 
 void cmd_help(int argc, char **argv) {
     printf("help    : Print this help menu.\r\n");
+    list_commands();
 }
 COMMAND_DEFINE("help", cmd_help);
 
