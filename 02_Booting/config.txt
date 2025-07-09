@@ -1,6 +1,4 @@
-kernel=kernel8.img
 arm_64bit=1
-disable_commandline_tags=1
 core_freq=250
 initramfs initramfs.cpio 0x20000000
 device_tree=bcm2710-rpi-3-b-plus.dtb
