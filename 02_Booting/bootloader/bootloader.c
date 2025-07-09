@@ -4,13 +4,13 @@
 #include "mini_uart.h"
 #include "utils.h"
 #define KERNEL_ADDR (0xa0000)
-#define KERNEL_MAIN ((void (*)(void))0xa0000)
+#define KERNEL_ENTRY ((void (*)(uint64_t, uint64_t, uint64_t))KERNEL_ADDR)
 #define ACK 0x06
 #define NACK 0x15
 #define TIMEOUT 1000
 #define MAGIC_HEADER "IMGX"
 
-extern void kernel_main(void);
+extern void _kernel_entry(uint64_t, uint64_t, uint64_t);
 
 size_t zrle_decompress(const uint8_t *in, size_t in_len, uint8_t *out) {
     size_t i = 0, j = 0;
@@ -90,7 +90,7 @@ int load_kernel_from_uart() {
     }
 }
 
-void bootloader_main() {
+void bootloader_main(uint64_t dtb_addr, uint64_t x1, uint64_t x2) {
     uart_init();
 
     printf(
@@ -107,13 +107,13 @@ void bootloader_main() {
             printf("Loading kernel from mini UART...\r\n");
             if (load_kernel_from_uart()) {
                 printf("Jumping to kernel...\r\n");
-                KERNEL_MAIN();
+                KERNEL_ENTRY(dtb_addr, x1, x2);
             } else {
                 printf("Please try again");
             }
         } else if (c == '2') {
             printf("Booting existing kernel...\r\n");
-            kernel_main();
+            _kernel_entry(dtb_addr, x1, x2);
         } else {
             printf("Error choice, please enter again\r\n");
         }

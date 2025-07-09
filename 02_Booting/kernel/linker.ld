@@ -2,7 +2,7 @@
  * This linker script links only kernel into a image.
  */
 
-ENTRY(kernel_main)
+ENTRY(_kernel_entry)
 
 MEMORY {
     KERNEL (rwx) : ORIGIN = 0xa0000, LENGTH = 1M
@@ -36,6 +36,7 @@ SECTIONS {
         . = . + 48K;
         __kernel_heap_end = .;
 
+        . = ALIGN(0x10);
         . = ORIGIN(KERNEL) + LENGTH(KERNEL) - 16K;
         __kernel_stack_bottom = .;
         . = . + 16K;

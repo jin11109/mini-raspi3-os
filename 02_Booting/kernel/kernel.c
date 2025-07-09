@@ -1,14 +1,24 @@
+#include "def.h"
 #include "mini_uart.h"
 #include "mm.h"
 #include "shell.h"
+#include "utils.h"
 
-extern char __kernel_bss_start, __kernel_bss_end;
+#define FDT_MAGIC 0xd00dfeed
 
-__attribute__((section(".kernel.entry")))
-void kernel_main(void) {
-    __asm__(
-        "ldr x0, =__kernel_stack_top \n"
-        "mov sp, x0");
-    memzero(&__kernel_bss_start, &__kernel_bss_end - &__kernel_bss_start);
+void verify_dtb(uintptr_t dtb_addr) {
+    uint32_t raw = *(volatile uint32_t*)dtb_addr;
+    uint32_t magic = __builtin_bswap32(raw);
+
+    if (magic == FDT_MAGIC) {
+        printf("Valid FDT at 0x%lx\r\n", dtb_addr);
+    } else {
+        printf("Invalid DTB magic at 0x%lx\r\n", dtb_addr);
+    }
+}
+
+void kernel_main(uint64_t dtb_addr, uint64_t x1, uint64_t x2) {
+    verify_dtb(dtb_addr);
+
     shell();
 }

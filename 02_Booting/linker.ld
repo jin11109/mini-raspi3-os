@@ -4,7 +4,7 @@
  * TODO: Refactor to generate separate image files for the bootloader and kernel.
  */
 
-ENTRY(_start)
+ENTRY(_bootloader_entry)
 
 MEMORY {
     BOOTLOADER (rwx) : ORIGIN = 0x80000, LENGTH = 128K
@@ -14,6 +14,7 @@ MEMORY {
 SECTIONS {
     /* bootloader section */
     .bootloader : {
+        __bootloader_start = .;
 		KEEP(*bootloader/*.o(.bootloader.entry))
         *bootloader/*.o(.text*)
         *bootloader/*.o(.rodata*)
@@ -33,9 +34,9 @@ SECTIONS {
         . = . + 16K;
         __bootloader_stack_top = .;
     } > BOOTLOADER
+    __bootloader_end = .;
 
     /* Kernel Section */
-
     .kernel : {
         __kernel_start = .;
 		KEEP(*kernel/*.o(.kernel.entry))
@@ -62,11 +63,12 @@ SECTIONS {
         . = . + 48K;
         __kernel_heap_end = .;
 
+        . = ALIGN(0x10);
         . = ORIGIN(KERNEL) + LENGTH(KERNEL) - 16K;
         __kernel_stack_bottom = .;
         . = . + 16K;
         __kernel_stack_top = .;
     } > KERNEL
-
     __kernel_end = .;
+    
 }
