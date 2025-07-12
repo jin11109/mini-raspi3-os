@@ -5,7 +5,7 @@
 ENTRY(_kernel_entry)
 
 MEMORY {
-    KERNEL (rwx) : ORIGIN = 0xa0000, LENGTH = 1M
+    KERNEL (rwx) : ORIGIN = 0x200000, LENGTH = 1M
 }
 
 SECTIONS {

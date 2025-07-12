@@ -9,6 +9,7 @@ ENTRY(_bootloader_entry)
 MEMORY {
     BOOTLOADER (rwx) : ORIGIN = 0x80000, LENGTH = 128K
     KERNEL (rwx) : ORIGIN = 0xa0000, LENGTH = 1M
+    OTAKERNEL  (rwx) : ORIGIN = 0x200000, LENGTH = 2M
 }
 
 SECTIONS {
@@ -70,5 +71,11 @@ SECTIONS {
         __kernel_stack_top = .;
     } > KERNEL
     __kernel_end = .;
+
+    .kernel_rx : {
+        __kernel_rx_start = .;
+        . = . + 2M;
+        __kernel_rx_end = .;
+    } > OTAKERNEL
     
 }

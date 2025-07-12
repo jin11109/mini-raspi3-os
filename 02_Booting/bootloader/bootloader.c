@@ -5,6 +5,7 @@
 #include "power.h"
 #include "utils.h"
 #define KERNEL_ADDR (0xa0000)
+#define OTA_KERNEL_ENTRY ((void (*)(uint64_t, uint64_t, uint64_t))0x200000)
 #define KERNEL_ENTRY ((void (*)(uint64_t, uint64_t, uint64_t))KERNEL_ADDR)
 #define ACK 0x06
 #define NACK 0x15
@@ -76,7 +77,7 @@ int load_kernel_from_uart() {
     // Check CRC
     unsigned int calc_crc = crc32_calculate(recv_buf, len);
     if (calc_crc == recv_crc) {
-        uint8_t *dst = (uint8_t *)KERNEL_ADDR;
+        uint8_t *dst = (uint8_t *)(0x200000);
         size_t decompressed_size = zrle_decompress(recv_buf, len, dst);
         printf("%c", ACK);
         printf("Kernel received, received %ld bytes, decompressed size %ld\r\n",
@@ -107,12 +108,16 @@ void bootloader_main(uint64_t dtb_addr, uint64_t x1, uint64_t x2) {
             printf("Loading kernel from mini UART...\r\n");
             if (load_kernel_from_uart()) {
                 printf("Jumping to kernel...\r\n");
-                KERNEL_ENTRY(dtb_addr, x1, x2);
+                asm volatile("dsb sy");
+                asm volatile("isb");
+                OTA_KERNEL_ENTRY(dtb_addr, x1, x2);
             } else {
                 printf("Please try again");
             }
         } else if (c == '2') {
             printf("Booting existing kernel...\r\n");
+            asm volatile("dsb sy");
+            asm volatile("isb");
             KERNEL_ENTRY(dtb_addr, x1, x2);
         } else {
             printf("Error choice, please enter again\r\n");

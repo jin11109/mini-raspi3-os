@@ -29,6 +29,5 @@ void kernel_main(uint64_t dtb_addr, uint64_t x1, uint64_t x2) {
 
     fdt_traverse((void *)dtb_addr, initramfs_callback);
     init_cpio((const char *)(initramfs_start));
-
     shell();
 }
