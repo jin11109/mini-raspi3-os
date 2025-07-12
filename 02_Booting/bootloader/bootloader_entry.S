@@ -1,6 +1,5 @@
 .section ".bootloader.entry"
 .extern bootloader_main
-.extern memzero
 
 .globl _bootloader_entry
 _bootloader_entry:

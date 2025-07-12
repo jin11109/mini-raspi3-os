@@ -1,6 +1,5 @@
 .section ".kernel.entry"
 .extern kernel_main
-.extern memzero
 
 .globl _kernel_entry
 _kernel_entry:

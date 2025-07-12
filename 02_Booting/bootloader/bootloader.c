@@ -70,7 +70,7 @@ int load_kernel_from_uart() {
     // Receive CRC
     unsigned int recv_crc = 0;
     for (int i = 0; i < 4; ++i) {
-        recv_crc |= ((unsigned int)uart_recv()) << (8 * i);
+        recv_crc |= ((unsigned int)getchar()) << (8 * i);
     }
 
     // Check CRC

@@ -9,6 +9,8 @@
 
 cpio_entry_t **cpio_entry = NULL;
 size_t cpio_entry_len = 0;
+uint64_t initramfs_start;
+uint64_t initramfs_end;
 
 void init_cpio(const char *cpio_base) {
     const char *ptr = cpio_base;
@@ -55,9 +57,6 @@ void init_cpio(const char *cpio_base) {
 }
 
 void cmd_ls(int argc, char **argv) {
-    if (cpio_entry == NULL) {
-        init_cpio((const char *)(0x20000000));
-    }
     cpio_entry_t *ptr = *cpio_entry;
     for (size_t i = 0; i < cpio_entry_len; i++) {
         printf("%s\r\n", ptr->name);

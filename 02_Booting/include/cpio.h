@@ -32,7 +32,11 @@ typedef struct {
     ((size_t)&(((struct cpio_newc_header *)0)->field))
 #define CPIO_HEADER_SIZE sizeof(struct cpio_newc_header)
 
-void parse_cpio(const char *cpio_base);
+extern cpio_entry_t **cpio_entry;
+extern size_t cpio_entry_len;
+extern uint64_t initramfs_start;
+extern uint64_t initramfs_end;
+
 void init_cpio(const char *cpio_base);
 
 #endif /* _CPIO_H */
