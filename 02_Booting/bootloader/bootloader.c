@@ -2,11 +2,9 @@
 #include "crc.h"
 #include "def.h"
 #include "mini_uart.h"
+#include "mm.h"
 #include "power.h"
 #include "utils.h"
-#define KERNEL_ADDR (0xa0000)
-#define OTA_KERNEL_ENTRY ((void (*)(uint64_t, uint64_t, uint64_t))0x200000)
-#define KERNEL_ENTRY ((void (*)(uint64_t, uint64_t, uint64_t))KERNEL_ADDR)
 #define ACK 0x06
 #define NACK 0x15
 #define TIMEOUT 1000
@@ -28,7 +26,7 @@ size_t zrle_decompress(const uint8_t *in, size_t in_len, uint8_t *out) {
     return j; // decompressed size
 }
 
-int load_kernel_from_uart() {
+int load_kernel_from_uart(void *kernel_start) {
     // Receive magic header
     uint8_t magic[4];
     int tries = 0;
@@ -77,7 +75,7 @@ int load_kernel_from_uart() {
     // Check CRC
     unsigned int calc_crc = crc32_calculate(recv_buf, len);
     if (calc_crc == recv_crc) {
-        uint8_t *dst = (uint8_t *)(0x200000);
+        uint8_t *dst = (uint8_t *)(kernel_start);
         size_t decompressed_size = zrle_decompress(recv_buf, len, dst);
         printf("%c", ACK);
         printf("Kernel received, received %ld bytes, decompressed size %ld\r\n",
@@ -89,10 +87,47 @@ int load_kernel_from_uart() {
         return 0;
     }
 }
-
 void bootloader_main(uint64_t dtb_addr, uint64_t x1, uint64_t x2) {
+
+    uintptr_t kernel_start, kernel_blob_start, kernel_blob_end;
+    asm volatile(
+        "ldr %0, =__kernel_start\n"
+        "ldr %1, =__kernel_blob_start\n"
+        "ldr %2, =__kernel_blob_end\n"
+        : "=r"(kernel_start), "=r"(kernel_blob_start), "=r"(kernel_blob_end));
+
+    void (*kernel_entry)(uint64_t, uint64_t, uint64_t) = (void *)kernel_start;
+
     cancel_reboot();
     uart_init();
+
+#ifdef DEBUG
+    printf(
+        "kernel_start,  0x%lx\r\n"
+        "kernel_blob_start kernel_blob_end 0x%lx, 0x%lx\r\n",
+        kernel_start, kernel_blob_start, kernel_blob_end);
+
+    uintptr_t bootloader_start, bootloader_end, reserved_region_start,
+        reserved_region_end, bootloader_heap_start, bootloader_heap_end;
+    asm volatile(
+        "ldr %0, =__bootloader_start\n"
+        "ldr %1, =__bootloader_end\n"
+        "ldr %2, =__reserved_region_start\n"
+        "ldr %3, =__reserved_region_end\n"
+        "ldr %4, =__bootloader_heap_start\n"
+        "ldr %5, =__bootloader_heap_end\n"
+        : "=r"(bootloader_start), "=r"(bootloader_end),
+          "=r"(reserved_region_start), "=r"(reserved_region_end),
+          "=r"(bootloader_heap_start), "=r"(bootloader_heap_end));
+
+    printf(
+        "__bootloader_start, __bootloader_end = 0x%lx, 0x%lx\r\n"
+        "__reserved_region_start, __reserved_region_end = 0x%lx, 0x%lx\r\n"
+        "__bootloader_heap_start, __bootloader_heap_end = 0x%lx, 0x%lx\r\n",
+        bootloader_start, bootloader_end, reserved_region_start,
+        reserved_region_end, bootloader_heap_start, bootloader_heap_end);
+
+#endif
 
     printf(
         "Bootloader Start\r\n"
@@ -106,19 +141,23 @@ void bootloader_main(uint64_t dtb_addr, uint64_t x1, uint64_t x2) {
 
         if (c == '1') {
             printf("Loading kernel from mini UART...\r\n");
-            if (load_kernel_from_uart()) {
+            if (load_kernel_from_uart((void *)kernel_start)) {
                 printf("Jumping to kernel...\r\n");
                 asm volatile("dsb sy");
                 asm volatile("isb");
-                OTA_KERNEL_ENTRY(dtb_addr, x1, x2);
+                kernel_entry(dtb_addr, x1, x2);
             } else {
                 printf("Please try again");
             }
         } else if (c == '2') {
+            /* relocate_kernel_blob */
+            uint64_t size = kernel_blob_end - kernel_blob_start;
+            memcpy((void *)kernel_start, (void *)kernel_blob_start, size);
+
             printf("Booting existing kernel...\r\n");
             asm volatile("dsb sy");
             asm volatile("isb");
-            KERNEL_ENTRY(dtb_addr, x1, x2);
+            kernel_entry(dtb_addr, x1, x2);
         } else {
             printf("Error choice, please enter again\r\n");
         }

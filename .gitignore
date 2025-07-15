@@ -7,3 +7,4 @@ build/
 initramfs.cpio
 a.out
 .vscode
+*.o

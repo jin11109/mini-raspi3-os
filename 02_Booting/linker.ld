@@ -1,81 +1,67 @@
 /**
  * This linker script links the bootloader and kernel into a unified image.
- *
- * TODO: Refactor to generate separate image files for the bootloader and kernel.
  */
 
 ENTRY(_bootloader_entry)
 
 MEMORY {
     BOOTLOADER (rwx) : ORIGIN = 0x80000, LENGTH = 128K
-    KERNEL (rwx) : ORIGIN = 0xa0000, LENGTH = 1M
-    OTAKERNEL  (rwx) : ORIGIN = 0x200000, LENGTH = 2M
+    KERNEL_BLOB (rwx) : ORIGIN = 0xa0000, LENGTH = 1M
+    RESERVED_REGION (rwx) : ORIGIN = 0x200000, LENGTH = 256K
 }
 
 SECTIONS {
     /* bootloader section */
+    . = 0x80000;
+    __kernel_start = .;
+    __bootloader_start = .;
     .bootloader : {
-        __bootloader_start = .;
 		KEEP(*bootloader/*.o(.bootloader.entry))
         *bootloader/*.o(.text*)
+        EXCLUDE_FILE(*kernel8_pure_blob.o) *(.text*)
         *bootloader/*.o(.rodata*)
+        EXCLUDE_FILE(*kernel8_pure_blob.o) *(.rodata*)
         *bootloader/*.o(.data*)
+        EXCLUDE_FILE(*kernel8_pure_blob.o) *(.data*)
+
+        . = ALIGN(8);
+        KEEP(*(.command_table))
+
+        /* bss */
 		. = ALIGN(0x8);
 		__bootloader_bss_start = .;
         *bootloader/*.o(.bss*)
+        EXCLUDE_FILE(*kernel8_pure_blob.o) *(.bss*)
 		__bootloader_bss_end = .;
 
+        /* heap */
         . = ALIGN(0x8);
         __bootloader_heap_start = .;
         . = . + 48K;
         __bootloader_heap_end = .;
 
+        /* stack */
         . = ORIGIN(BOOTLOADER) + LENGTH(BOOTLOADER) - 16K;
         __bootloader_stack_bottom = .;
         . = . + 16K;
         __bootloader_stack_top = .;
     } > BOOTLOADER
     __bootloader_end = .;
-
-    /* Kernel Section */
-    .kernel : {
-        __kernel_start = .;
-		KEEP(*kernel/*.o(.kernel.entry))
-        *kernel/*.o(.text*)
-        *(.text*)
-        *kernel/*.o(.rodata*)
-        *(.rodata*)
-        *kernel/*.o(.data*)
-		*(.data*)
-
-        . = ALIGN(8);
-        __command_start = .;
-        KEEP(*(.command_table))
-        __command_end = .;
-
-        . = ALIGN(0x8);
-		__kernel_bss_start = .;
-        *kernel/*.o(.bss*)
-        *(.bss*)	
-		__kernel_bss_end = .;
-
-        . = ALIGN(0x8);
-        __kernel_heap_start = .;
-        . = . + 48K;
-        __kernel_heap_end = .;
-
-        . = ALIGN(0x10);
-        . = ORIGIN(KERNEL) + LENGTH(KERNEL) - 16K;
-        __kernel_stack_bottom = .;
-        . = . + 16K;
-        __kernel_stack_top = .;
-    } > KERNEL
-    __kernel_end = .;
-
-    .kernel_rx : {
-        __kernel_rx_start = .;
-        . = . + 2M;
-        __kernel_rx_end = .;
-    } > OTAKERNEL
     
+    /* kernel blob section */
+    . = 0xa0000;
+    __kernel_blob_start = .;
+    .kernel_blob : {
+        KEEP(*kernel8_pure_blob.o(*))
+    } > KERNEL_BLOB
+    __kernel_blob_end = .;
+
+    /* reserved region */
+    . = 0x200000;
+    __reserved_region_start = .;
+    .reserved_region : {
+        . = . + LENGTH(RESERVED_REGION);
+    } > RESERVED_REGION
+    __reserved_region_end = .;
+
 }

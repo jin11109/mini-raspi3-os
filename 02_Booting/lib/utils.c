@@ -12,18 +12,18 @@ void printf(const char *fmt, ...) {
     uint64_t args[7];
 
     __asm__ volatile(
-        "mov %[a0], x1 \n"
-        "mov %[a1], x2 \n"
-        "mov %[a2], x3 \n"
-        "mov %[a3], x4 \n"
-        "mov %[a4], x5 \n"
-        "mov %[a5], x6 \n"
-        "mov %[a6], x7 \n"
-        : [a0] "=r"(args[0]), [a1] "=r"(args[1]), [a2] "=r"(args[2]),
-          [a3] "=r"(args[3]), [a4] "=r"(args[4]), [a5] "=r"(args[5]),
-          [a6] "=r"(args[6])
+        "mov %0, x1\n"
+        "mov %1, x2\n"
+        "mov %2, x3\n"
+        "mov %3, x4\n"
+        "mov %4, x5\n"
+        "mov %5, x6\n"
+        "mov %6, x7\n"
+        : "=r"(args[0]), "=r"(args[1]), "=r"(args[2]),
+          "=r"(args[3]), "=r"(args[4]), "=r"(args[5]),
+          "=r"(args[6])
         :
-        : "memory");
+        : "x1", "x2", "x3", "x4", "x5", "x6", "x7", "memory");
 
     int arg_idx = 0;
     char buf[64];

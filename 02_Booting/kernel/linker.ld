@@ -1,11 +1,11 @@
 /**
- * This linker script links only kernel into a image.
+ * This linker script links only kernel.
  */
 
 ENTRY(_kernel_entry)
 
 MEMORY {
-    KERNEL (rwx) : ORIGIN = 0x200000, LENGTH = 1M
+    KERNEL (rwx) : ORIGIN = 0x80000, LENGTH = 1M
 }
 
 SECTIONS {
