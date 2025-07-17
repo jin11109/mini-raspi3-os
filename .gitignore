@@ -8,3 +8,4 @@ initramfs.cpio
 a.out
 .vscode
 *.o
+*.dtb
