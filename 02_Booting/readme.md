@@ -65,6 +65,9 @@ Added a self-relocation feature to the bootloader. When loading a kernel, the bo
 5. **Flattened Device Tree (FDT) Parsing**  
 Implemented a basic FDT (Flattened Device Tree) parser that enables the kernel to automatically retrieve hardware-related information, including the address of the initial ramdisk, by traversing the device tree provided by the bootloader and firmware.
 
+6. **Modular Command Registration System**  
+Introduced a modular command registration mechanism that allows shell commands to be automatically registered at compile-time using linker sections. This design decouples command implementation from the shell and enables easy extensibility for future commands.
+
 # DEMO
 ## Run on Raspberry Pi 3B+
 - **Start Raspberry Pi 3B+**
