@@ -2,11 +2,9 @@
 export PATH := $(CROSS_COMPILER_PATH):$(PATH)
 
 CROSS_COMPILE ?= aarch64-none-elf-
-MODEL = raspi3b
 LD := $(CROSS_COMPILE)ld
 OBJCOPY := $(CROSS_COMPILE)objcopy
 
-QEMUOPS = -cpu cortex-a53 -nographic -initrd initramfs.cpio -serial null -serial pty
 BUILD_DIR = ./build
 
 BOOTLOADER_OBJS = $(wildcard $(BUILD_DIR)/bootloader/*.o)
@@ -41,13 +39,6 @@ kernel8_pure.img: ./kernel/linker.ld build-kernel build-lib
 
 initramfs.cpio:
 	cd rootfs && find . | cpio -o -H newc > ../initramfs.cpio
-
-.PHONY: qemu
-qemu: kernel8.img
-	@qemu-system-aarch64 -M $(MODEL) -kernel kernel8.img $(QEMUOPS) 
-.PHONY: qemu-debug
-qemu-debug: kernel8.img
-	@qemu-system-aarch64 -M $(MODEL) -kernel kernel8.img $(QEMUOPS) -S -gdb tcp::1234
 
 .PHONY: clean
 clean:
