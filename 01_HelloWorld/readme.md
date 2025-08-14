@@ -1,3 +1,24 @@
+# Quick Start
+Use the Makefile to build `kernel8.img`:
+```bash
+$ make
+```
+Or build `kernel8.img` and run it in QEMU:
+```bash
+$ make qemu
+```
+## Debug way
+Use the following command to start debugging with QEMU.  
+**Warning**: This command will first execute `make clean` automatically.
+```bash
+$ make qemu-debug
+```
+Then, in another terminal, run:
+```
+$ aarch64-none-elf-gdb ./build/kernel8.elf
+$ (gdb) target remote :1234
+```
+
 # Implemented Features
 
 1. Set up **mini UART** as a bridge between rpi3 and host computer

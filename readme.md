@@ -4,30 +4,16 @@ This repository was created step by step by following **Professor Tsung Tai Yeh*
 Special thanks to the professor for making these learning resources publicly available.
 
 # Quick Start
-Use the Makefile to build `kernel8.img`:
-```bash
-$ make
-```
-Or build `kernel8.img` and run it in QEMU:
-```bash
-$ make qemu
-```
-## Debug way
-After entering a lesson directory and setting up the environment, use the following command to start debugging with QEMU.  
-**Warning**: This command will first execute `make clean` automatically.
-```bash
-$ make qemu-debug
-```
-Then, in another terminal, run:
-```
-$ aarch64-none-elf-gdb ./build/kernel8.elf
-$ (gdb) target remote :1234
-```
+Check the “Quick Start” section in each directory’s README file for details.
 
 # Development Notes
 - [Lab 0: Environment Setup](https://hackmd.io/@0a2xfYPxSzGdcXv06JB8_Q/rkHdpYkZxe)
 
 - [Lab 1: Hello World](https://hackmd.io/@0a2xfYPxSzGdcXv06JB8_Q/SJP2qXEbeg)
+
+- [Lab 2: Booting](https://hackmd.io/@0a2xfYPxSzGdcXv06JB8_Q/rkq6I7EXel)
+
+- [Lab 3: Exception and Interrupt](https://hackmd.io/@0a2xfYPxSzGdcXv06JB8_Q/SJLHrUjdxl)
 
 # References
 - [mini-arm-os](https://github.com/jserv/mini-arm-os/tree/master)
