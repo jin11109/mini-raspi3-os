@@ -1,0 +1,4 @@
+arm_64bit=1
+core_freq=250
+initramfs initramfs.cpio followkernel
+device_tree=bcm2710-rpi-3-b-plus.dtb
