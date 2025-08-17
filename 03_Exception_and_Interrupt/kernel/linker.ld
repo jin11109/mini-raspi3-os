@@ -36,6 +36,13 @@ SECTIONS {
         . = . + 48K;
         __kernel_heap_end = .;
 
+        /* EL2 stack (4 KB) */
+        . = ALIGN(0x10);
+        __el2_stack_bottom = .;
+        . = . + 4K;
+        __el2_stack_top = .;
+
+        /* EL1 stack (16 KB) */
         . = ALIGN(0x10);
         . = ORIGIN(KERNEL) + LENGTH(KERNEL) - 16K;
         __kernel_stack_bottom = .;
