@@ -10,6 +10,8 @@ BUILD_DIR = ./build
 BOOTLOADER_OBJS = $(wildcard $(BUILD_DIR)/bootloader/*.o)
 KERNEL_OBJS = $(wildcard $(BUILD_DIR)/kernel/*.o)
 COMMAND_LIB := $(BUILD_DIR)/lib/libcommand.a
+# All of files in rootfs
+ROOTFS_FILES := $(shell find ./rootfs)
 
 all: kernel8.img initramfs.cpio
 kernel-pure: kernel8_pure.img initramfs.cpio
@@ -37,7 +39,7 @@ kernel8_pure.img: ./kernel/linker.ld build-kernel build-lib
 	$(LD) -T ./kernel/linker.ld -o $(BUILD_DIR)/kernel8_pure.elf --whole-archive $(COMMAND_LIB) $(KERNEL_OBJS)
 	$(OBJCOPY) $(BUILD_DIR)/kernel8_pure.elf -O binary kernel8_pure.img
 
-initramfs.cpio:
+initramfs.cpio: $(ROOTFS_FILES)
 	cd rootfs && find . | cpio -o -H newc > ../initramfs.cpio
 
 .PHONY: clean
