@@ -4,7 +4,8 @@
 
 int strcmp(const char* str1, const char* str2);
 
-size_t strlen(char* str);
+size_t strlen(const char* str);
+int strstr(const char* haystack, const char* needle);
 void strrev(char* str);
 void strncpy(char* dst, const char* src, size_t len);
 size_t split_inplace(char** buf, char* str, char delim, size_t max_substr);

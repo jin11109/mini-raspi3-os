@@ -7,6 +7,19 @@
 #include "string.h"
 #include "utils.h"
 
+/* file type mask */
+#define CPIO_MODE_IFMT 0xF000  // file type mask
+#define CPIO_MODE_IFREG 0x8000 // regular file
+#define CPIO_MODE_IFDIR 0x4000 // directory
+
+/* Execute bits */
+#define CPIO_MODE_IXUSR 0x0040 // owner execute
+#define CPIO_MODE_IXGRP 0x0008 // group execute
+#define CPIO_MODE_IXOTH 0x0001 // other execute
+
+/* Convenience: any execute bit */
+#define CPIO_MODE_EXEC_ANY (CPIO_MODE_IXUSR | CPIO_MODE_IXGRP | CPIO_MODE_IXOTH)
+
 cpio_entry_t **cpio_entry = NULL;
 size_t cpio_entry_len = 0;
 uint64_t initramfs_start;
@@ -56,6 +69,35 @@ void init_cpio(const char *cpio_base) {
     }
 }
 
+void *cpio_get_executable_file(const char *name) {
+    cpio_entry_t *ptr = *cpio_entry;
+    for (size_t i = 0; i < cpio_entry_len; i++) {
+        if (strcmp(name, ptr->name) == 0) {
+            /* Test if executable */
+            const struct cpio_newc_header *hdr =
+                (const struct cpio_newc_header *)(ptr->name - CPIO_HEADER_SIZE);
+            uint32_t c_mode = atou_hex(hdr->c_mode, 8);
+            uint32_t type = c_mode & CPIO_MODE_IFMT;
+
+            if (type == CPIO_MODE_IFDIR) {
+                printf("This is a directory\r\n");
+                return NULL;
+            }
+
+            if (type == CPIO_MODE_IFREG) {
+                if (c_mode & CPIO_MODE_EXEC_ANY) {
+                    return (void *)ptr->data;
+                }
+            }
+
+            printf("This is not executable file\r\n");
+            return NULL;
+        }
+        ptr++;
+    }
+    return NULL;
+}
+
 void cmd_ls(int argc, char **argv) {
     cpio_entry_t *ptr = *cpio_entry;
     for (size_t i = 0; i < cpio_entry_len; i++) {
@@ -78,6 +120,7 @@ void cmd_cat(int argc, char **argv) {
                 data_ptr++;
             }
             printf("\r\n");
+            return;
         }
         ptr++;
     }

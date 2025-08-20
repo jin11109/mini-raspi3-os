@@ -1,6 +1,6 @@
 .section ".bootloader.entry"
 
-.extern bootloader_main 
+.extern bootloader_main
 
 .global _bootloader_entry
 _bootloader_entry:

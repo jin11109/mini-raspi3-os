@@ -23,9 +23,9 @@ struct cpio_newc_header {
 };
 
 typedef struct {
-    const char *name;
-    const void *data;
-    uint32_t data_size;
+        const char *name;
+        const void *data;
+        uint32_t data_size;
 } cpio_entry_t;
 
 #define CPIO_FIELD_OFFSET(field) \
@@ -38,5 +38,6 @@ extern uint64_t initramfs_start;
 extern uint64_t initramfs_end;
 
 void init_cpio(const char *cpio_base);
+void *cpio_get_executable_file(const char *name);
 
 #endif /* _CPIO_H */

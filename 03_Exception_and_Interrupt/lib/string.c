@@ -23,7 +23,7 @@ int strcmp(const char* str1, const char* str2) {
     }
 }
 
-size_t strlen(char* str) {
+size_t strlen(const char* str) {
     /* TODO : This error handling should be implemented. */
     if (str == NULL) {
         return 0;
@@ -35,6 +35,27 @@ size_t strlen(char* str) {
         str++;
     }
     return len;
+}
+
+int strstr(const char* haystack, const char* needle) {
+    /* TODO : This error handling should be implemented. */
+    if (haystack == NULL) {
+        return 0;
+    }
+
+    if (!*needle) return 1;
+
+    for (int i = 0; haystack[i] != '\0'; i++) {
+        int j = 0;
+        while (needle[j] != '\0' && haystack[i + j] != '\0' &&
+               haystack[i + j] == needle[j]) {
+            j++;
+        }
+        if (needle[j] == '\0') {
+            return 1;
+        }
+    }
+    return 0;
 }
 
 void strrev(char* str) {
