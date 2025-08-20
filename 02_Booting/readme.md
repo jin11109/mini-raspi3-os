@@ -46,6 +46,7 @@ To update the kernel without physically accessing the SD card (i.e., over mini-U
     ```bash
     $ aarch64-none-elf-gdb ./build/kernel8.elf
     (gdb) target remote :1234
+    (gdb) symbol-file ./build/kernel8_pure.elf
     ```
 
 # Implemented Features
