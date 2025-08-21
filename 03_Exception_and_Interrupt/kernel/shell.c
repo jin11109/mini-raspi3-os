@@ -18,6 +18,7 @@ void test_user_prog() {
         "svc 0\n"
         "cmp x0, 5\n"
         "blt loop\n"
+        "b .\n"
         :
         :
         : "x0", "memory");
@@ -29,7 +30,7 @@ void execute_user_prog(void* data_ptr) {
     char user_stack_top[8 * 1024];
     __asm__ volatile(
         "msr sp_el0, %0\n"
-        "mov x0, #0x3C0\n"
+        "mov x0, #0\n"
         "msr spsr_el1, x0\n"
         "msr elr_el1, %1\n"
         "eret\n"
