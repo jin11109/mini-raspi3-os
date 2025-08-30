@@ -45,17 +45,14 @@ size_t read_line(char* buf) {
     while (1) {
         char c = getchar();
         if (c == '\r' || c == '\n') {
-            printf("\r");
-            printf("\n");
+            printf("\r\n");
             buf[pos] = '\0';
 
             return pos;
         } else if (c == 0x08 || c == 0x7F) {
             if (pos > 0) {
                 pos--;
-                printf("\b");
-                printf(" ");
-                printf("\b");
+                printf("\b \b");
             }
         } else if (pos < MAX_BUF - 2) {
             buf[pos++] = c;

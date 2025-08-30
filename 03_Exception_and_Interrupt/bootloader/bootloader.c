@@ -34,7 +34,7 @@ int load_kernel_from_uart(void *kernel_start) {
         magic[0] = magic[1];
         magic[1] = magic[2];
         magic[2] = magic[3];
-        magic[3] = getchar();
+        magic[3] = getchar_sync();
 
         if (magic[0] == 'I' && magic[1] == 'M' && magic[2] == 'G' &&
             magic[3] == 'X')
@@ -42,34 +42,34 @@ int load_kernel_from_uart(void *kernel_start) {
     }
     if (magic[0] != 'I' || magic[1] != 'M' || magic[2] != 'G' ||
         magic[3] != 'X') {
-        printf("%c", NACK);
-        printf("Invalid header\r\n");
+        printf_sync("%c", NACK);
+        printf_sync("Invalid header\r\n");
         return 0;
     }
 
     // Receive length
     uint32_t len = 0;
     for (int i = 0; i < 4; i++) {
-        len |= ((uint32_t)getchar()) << (8 * i);
+        len |= ((uint32_t)getchar_sync()) << (8 * i);
     }
 
-    // printf("Receiving %d bytes\r\n", len);
+    // printf_sync("Receiving %d bytes\r\n", len);
 
     // Receive payload
     uint8_t *recv_buf = (uint8_t *)bmalloc(len + 1);
     if (recv_buf == NULL) {
-        printf("%c", NACK);
-        printf("Heap error\r\n");
+        printf_sync("%c", NACK);
+        printf_sync("Heap error\r\n");
         return 0;
     }
     for (uint32_t i = 0; i < len; i++) {
-        recv_buf[i] = getchar();
+        recv_buf[i] = getchar_sync();
     }
 
     // Receive CRC
     unsigned int recv_crc = 0;
     for (int i = 0; i < 4; ++i) {
-        recv_crc |= ((unsigned int)getchar()) << (8 * i);
+        recv_crc |= ((unsigned int)getchar_sync()) << (8 * i);
     }
 
     // Check CRC
@@ -77,18 +77,18 @@ int load_kernel_from_uart(void *kernel_start) {
     if (calc_crc == recv_crc) {
         uint8_t *dst = (uint8_t *)(kernel_start);
         size_t decompressed_size = zrle_decompress(recv_buf, len, dst);
-        printf("%c", ACK);
-        printf("Kernel received, received %ld bytes, decompressed size %ld\r\n",
-               len, decompressed_size);
+        printf_sync("%c", ACK);
+        printf_sync(
+            "Kernel received, received %ld bytes, decompressed size %ld\r\n",
+            len, decompressed_size);
         return 1;
     } else {
-        printf("%c", NACK);
-        printf("Payload is wrong\r\n");
+        printf_sync("%c", NACK);
+        printf_sync("Payload is wrong\r\n");
         return 0;
     }
 }
 void bootloader_main(uint64_t dtb_addr, uint64_t x1, uint64_t x2) {
-
     uintptr_t kernel_start, kernel_blob_start, kernel_blob_end;
     asm volatile(
         "ldr %0, =__kernel_start\n"
@@ -99,10 +99,10 @@ void bootloader_main(uint64_t dtb_addr, uint64_t x1, uint64_t x2) {
     void (*kernel_entry)(uint64_t, uint64_t, uint64_t) = (void *)kernel_start;
 
     cancel_reboot();
-    uart_init();
+    mini_uart_init();
 
 #ifdef DEBUG
-    printf(
+    printf_sync(
         "kernel_start,  0x%lx\r\n"
         "kernel_blob_start kernel_blob_end 0x%lx, 0x%lx\r\n",
         kernel_start, kernel_blob_start, kernel_blob_end);
@@ -120,7 +120,7 @@ void bootloader_main(uint64_t dtb_addr, uint64_t x1, uint64_t x2) {
           "=r"(reserved_region_start), "=r"(reserved_region_end),
           "=r"(bootloader_heap_start), "=r"(bootloader_heap_end));
 
-    printf(
+    printf_sync(
         "__bootloader_start, __bootloader_end = 0x%lx, 0x%lx\r\n"
         "__reserved_region_start, __reserved_region_end = 0x%lx, 0x%lx\r\n"
         "__bootloader_heap_start, __bootloader_heap_end = 0x%lx, 0x%lx\r\n",
@@ -129,37 +129,37 @@ void bootloader_main(uint64_t dtb_addr, uint64_t x1, uint64_t x2) {
 
 #endif
 
-    printf(
+    printf_sync(
         "Bootloader Start\r\n"
         "[1] Load Kernel from mini UART\r\n"
         "[2] Boot from existing Kernel\r\n");
 
     do {
-        printf("Enter choice: ");
-        char c = getchar();
-        printf("%c\r\n", c);
+        printf_sync("Enter choice: ");
+        char c = getchar_sync();
+        printf_sync("%c\r\n", c);
 
         if (c == '1') {
-            printf("Loading kernel from mini UART...\r\n");
+            printf_sync("Loading kernel from mini UART...\r\n");
             if (load_kernel_from_uart((void *)kernel_start)) {
-                printf("Jumping to kernel...\r\n");
+                printf_sync("Jumping to kernel...\r\n");
                 asm volatile("dsb sy");
                 asm volatile("isb");
                 kernel_entry(dtb_addr, x1, x2);
             } else {
-                printf("Please try again");
+                printf_sync("Please try again");
             }
         } else if (c == '2') {
             /* relocate_kernel_blob */
             uint64_t size = kernel_blob_end - kernel_blob_start;
             memcpy((void *)kernel_start, (void *)kernel_blob_start, size);
 
-            printf("Booting existing kernel...\r\n");
+            printf_sync("Booting existing kernel...\r\n");
             asm volatile("dsb sy");
             asm volatile("isb");
             kernel_entry(dtb_addr, x1, x2);
         } else {
-            printf("Error choice, please enter again\r\n");
+            printf_sync("Error choice, please enter again\r\n");
         }
     } while (1);
 }

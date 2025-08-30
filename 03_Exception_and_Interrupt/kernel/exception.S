@@ -83,28 +83,66 @@ exception_entry:
 .global irq_handler
 irq_handler:
     save_all
-    
-    // caller save
+
+    // Check core timer intterrupt (Core0 Interrupt Source, bit 1)
+    ldr x0, =0x40000060 // Core0 interrupt source
+    ldr w0, [x0]
+    tst w0, #(1<<1)// Check CNTPNSIRQ
+    bne core_timer_handler
+
+    // Check mini UART interrupt (IRQ_PENDING1, bit 29)
+    ldr x0, =0x3f00b204 // IRQ_PENDING1
+    ldr w0, [x0]
+    tst w0, #(1<<29)// check mini UART interrupt
+    bne uart_handler
+
+    b irq_exit
+
+core_timer_handler:
+    // Caller save
     stp x0, x1, [sp, #-16]!
     stp x2, x3, [sp, #-16]!
     stp x30, xzr, [sp, #-16]!
+
     // Call printf
     adrp x0, fmt_seconds
     add x0, x0, :lo12:fmt_seconds
     mrs x1, cntpct_el0 // ticks
     mrs x2, cntfrq_el0 // freq
-    udiv x1, x1, x2 // seconds = ticks / freq
-    bl printf
-    
-    // Reload
+    udiv x1, x1, x2    // seconds = ticks / freq
+    //bl printf // Close temporarily
+
+    // Restore caller save
     ldp x30, xzr, [sp], #16
     ldp x2, x3, [sp], #16
     ldp x0, x1, [sp], #16
-    
-    // Set next interrupt
+
+    // Set next core timer interrupt
     mrs x0, cntfrq_el0
-    lsl x0, x0, #1 // freq << 2
-    msr cntp_tval_el0, x0 // set cntp_cval_el0 - cntpct_el0 = x0
-    
+    lsl x0, x0, #1 // freq << 1 (2 seconds)
+    msr cntp_tval_el0, x0
+
+    b irq_exit
+
+uart_handler:
+    // Test UART interrupt type
+    ldr x0, =0x3f215048 // AUX_MU_IIR_REG
+    ldr w0, [x0]
+    and w1, w0, #0x6
+    cmp w1, #0x2 // TX interrupt
+    beq tx_handler
+    cmp w1, #0x4 // RX interrupt
+    beq rx_handler
+    b irq_exit
+
+tx_handler:
+    bl mini_uart_tx_handler
+    b irq_exit
+
+rx_handler:
+    bl mini_uart_rx_handler
+    b irq_exit
+
+irq_exit:
     load_all
     eret

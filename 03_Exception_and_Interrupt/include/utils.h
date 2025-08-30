@@ -5,8 +5,10 @@ extern void delay(unsigned long);
 extern void put32(unsigned long, unsigned int);
 extern unsigned int get32(unsigned long);
 
-void printf(const char* fmt, ...);
+void printf(const char *fmt, ...);
+void printf_sync(const char *fmt, ...);
 char getchar();
+char getchar_sync();
 
 /* The parameter 'alignment' should be a power of 2 */
 #define ALIGN(s, alignment) (((s) + (alignment - 1)) & ~(alignment - 1))

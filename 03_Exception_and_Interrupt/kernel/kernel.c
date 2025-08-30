@@ -26,8 +26,11 @@ void kernel_main(uint64_t dtb_addr, uint64_t x1, uint64_t x2) {
 #ifdef DEBUG
     verify_dtb(dtb_addr);
 #endif
+    // open IRQ
+    asm volatile("msr daifclr, #2");
 
     fdt_traverse((void *)dtb_addr, initramfs_callback);
     init_cpio((const char *)(initramfs_start));
+    mini_uart_async_init();
     shell();
 }
