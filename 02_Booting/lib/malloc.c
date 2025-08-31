@@ -40,7 +40,7 @@ void* malloc(size_t size) {
     mblock->size = size;
 
     char* new_free_ptr = free_ptr + sizeof(mblock_t);
-    free_ptr += size;
+    free_ptr += size + sizeof(mblock_t);
 
     return (void*)new_free_ptr;
 }
