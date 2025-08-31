@@ -66,11 +66,15 @@ exception_handler:
 .global exception_entry
 .extern printf
 exception_entry:
+    // Mask all interrupt
+    msr DAIFSet, #0xf
+
     // Load rodata
     adrp x0, fmt_spsr
     add x0, x0, :lo12:fmt_spsr
 
     // Call printf
+    /* XXX: This may be slow because mini uart io. */
     mrs x1, spsr_el1
     mrs x2, elr_el1
     mrs x3, esr_el1
@@ -82,6 +86,10 @@ exception_entry:
 
 .global irq_handler
 irq_handler:
+    // Mask all interrupt
+    /* TODO: Consider mask only one interrupt instead of all of them */
+    msr DAIFSet, #0xf
+
     save_all
 
     // Check core timer intterrupt (Core0 Interrupt Source, bit 1)

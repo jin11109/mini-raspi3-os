@@ -32,6 +32,9 @@ loop:
 
     bl core_timer_enable
 
+    // Enble interrupt
+    msr daifclr, #0xf
+
     // Call kernel_main function
     mov x0, x20
     mov x1, x21
