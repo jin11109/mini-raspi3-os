@@ -96,7 +96,7 @@ irq_handler:
     ldr x0, =0x40000060 // Core0 interrupt source
     ldr w0, [x0]
     tst w0, #(1<<1)// Check CNTPNSIRQ
-    bne core_timer_handler
+    bne timer_handler
 
     // Check mini UART interrupt (IRQ_PENDING1, bit 29)
     ldr x0, =0x3f00b204 // IRQ_PENDING1
@@ -106,30 +106,8 @@ irq_handler:
 
     b irq_exit
 
-core_timer_handler:
-    // Caller save
-    stp x0, x1, [sp, #-16]!
-    stp x2, x3, [sp, #-16]!
-    stp x30, xzr, [sp, #-16]!
-
-    // Call printf
-    adrp x0, fmt_seconds
-    add x0, x0, :lo12:fmt_seconds
-    mrs x1, cntpct_el0 // ticks
-    mrs x2, cntfrq_el0 // freq
-    udiv x1, x1, x2    // seconds = ticks / freq
-    //bl printf // Close temporarily
-
-    // Restore caller save
-    ldp x30, xzr, [sp], #16
-    ldp x2, x3, [sp], #16
-    ldp x0, x1, [sp], #16
-
-    // Set next core timer interrupt
-    mrs x0, cntfrq_el0
-    lsl x0, x0, #1 // freq << 1 (2 seconds)
-    msr cntp_tval_el0, x0
-
+timer_handler:
+    bl timer_interrupt_handler
     b irq_exit
 
 uart_handler:

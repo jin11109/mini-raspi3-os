@@ -6,6 +6,7 @@
 #include "mm.h"
 #include "shell.h"
 #include "utils.h"
+#include "timer.h"
 
 #ifdef DEBUG
 #define FDT_MAGIC 0xd00dfeed
@@ -26,6 +27,7 @@ void kernel_main(uint64_t dtb_addr, uint64_t x1, uint64_t x2) {
 #ifdef DEBUG
     verify_dtb(dtb_addr);
 #endif
+    init_timer();
     fdt_traverse((void *)dtb_addr, initramfs_callback);
     init_cpio((const char *)(initramfs_start));
     mini_uart_async_init();

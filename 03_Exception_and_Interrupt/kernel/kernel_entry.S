@@ -1,8 +1,6 @@
 .section ".kernel.entry"
 .extern kernel_main
 
-#define CORE0_TIMER_IRQ_CTRL 0x40000040
-
 .globl _kernel_entry
 _kernel_entry:
     // Save arguments temporarily in callee-saved registers
@@ -30,11 +28,6 @@ loop:
 
     bl from_el2_to_el1 // the next instruction runs in EL1
 
-    bl core_timer_enable
-
-    // Enble interrupt
-    msr daifclr, #0xf
-
     // Call kernel_main function
     mov x0, x20
     mov x1, x21
@@ -49,20 +42,12 @@ from_el2_to_el1:
     ldr x0, =__kernel_stack_top
     msr sp_el1, x0
 
-    mov x0, 0x3c5 // EL1h (SPSel = 1) with interrupt disabled
+    /**
+     * 0x3c5 => M=0101 (EL1h), DAIF=1111 (interrupt disabled)
+     * 0x5   => M=0101, DAIF=0000
+     */
+    mov x0, 0x5
     msr spsr_el2, x0
 
     msr elr_el2, lr
     eret // return to EL1
-
-core_timer_enable:
-    mov x0, 1
-    msr cntp_ctl_el0, x0 // enable
-    mrs x0, cntfrq_el0
-    lsl x0, x0, #1
-    msr cntp_tval_el0, x0 // set expired time (2 seconds)
-    
-    mov x0, 2
-    ldr x1, =CORE0_TIMER_IRQ_CTRL
-    str w0, [x1]// unmask timer interrupt
-    ret
