@@ -12,7 +12,7 @@ typedef struct timer_event{
         struct timer_event *next;
 } timer_event_t;
 
-extern inline void init_timer();
+void init_timer();
 void add_timer(timer_callback_t cb, void *data, uint64_t after_ticks);
 
 #endif /* _TIMER_H */

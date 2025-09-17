@@ -41,7 +41,7 @@ static inline void disable_hardware_timer() {
     asm volatile("msr CNTP_CTL_EL0, %0" ::"r"(0));
 }
 
-inline void init_timer() {
+void init_timer() {
     // Enable core timer IRQ send to GIC/CPU
     *(volatile unsigned int *)CORE0_TIMER_IRQ_CTRL = 2;
 }
