@@ -1,4 +1,4 @@
-#include "bmalloc.h"
+#include "malloc.h"
 
 #include "def.h"
 #include "utils.h"
@@ -11,9 +11,9 @@ typedef struct mblock {
 
 static char* free_ptr = NULL;
 static char* heap_end = NULL;
-static char is_init_bmalloc = 0;
+static char is_init_malloc = 0;
 
-void init_bmalloc() {
+void init_malloc() {
     uintptr_t bootloader_start, reserved_region_start, bootloader_heap_start,
         bootloader_heap_end;
     asm volatile(
@@ -32,10 +32,10 @@ void init_bmalloc() {
 /**
  * Bootloader malloc
  */
-void* bmalloc(size_t size) {
-    if (!is_init_bmalloc) {
-        init_bmalloc();
-        is_init_bmalloc = 1;
+void* malloc(size_t size) {
+    if (!is_init_malloc) {
+        init_malloc();
+        is_init_malloc = 1;
     }
 
     if (size == 0) return NULL;
