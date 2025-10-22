@@ -4,8 +4,8 @@ CC := $(CROSS_COMPILE)gcc
 LD := $(CROSS_COMPILE)ld
 AR := $(CROSS_COMPILE)ar
 
-COPS = -Wall -nostdlib -nostartfiles -ffreestanding -DBOOTLOADER -I../include -mgeneral-regs-only -O2
-ASMOPS = -DBOOTLOADER -I../include -O2
+COPS = -Wall -nostdlib -nostartfiles -ffreestanding -I../include -mgeneral-regs-only -O2
+ASMOPS = -I../include -O2
 
 # Process parameter
 ENABLE_DEBUG ?= 0
