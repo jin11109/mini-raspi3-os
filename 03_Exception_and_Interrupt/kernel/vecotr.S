@@ -16,7 +16,7 @@ exception_vector_table:
 // EL1h
     b exception_handler // Synchronous
 .align 7
-    b irq_handler // IRQ
+    b irq_entry // IRQ
 .align 7
     b exception_handler // FIQ
 .align 7
@@ -26,7 +26,7 @@ exception_vector_table:
 // EL0_64
     b exception_handler
 .align 7
-    b irq_handler
+    b irq_entry
 .align 7
     b exception_handler
 .align 7

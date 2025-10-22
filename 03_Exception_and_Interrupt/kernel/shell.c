@@ -49,7 +49,8 @@ void execute_user_prog(void* data_ptr) {
 
 inline static void clear_line(size_t n) {
     n += sizeof(PROMPT) - 1;
-    char clear[n];
+    char clear[n + 1];
+    clear[n] = '\0';
     memset(clear, ' ', n);
     printf("\r%s", clear);
 }
@@ -84,10 +85,10 @@ size_t read_line(char* buf) {
                 // Point to '\0'
                 pos = strlen(buf);
 
-                printf("\r"PROMPT"%s", buf);
+                printf("\r" PROMPT "%s", buf);
             } else if (c == 'B') { // down button
                 clear_line(pos + 1);
-                
+
                 if (history_pos < history_count) history_pos++;
                 if (history_pos == history_count) {
                     buf[0] = '\0';
@@ -99,7 +100,7 @@ size_t read_line(char* buf) {
                     pos = strlen(buf);
                 }
 
-                printf("\r"PROMPT"%s", buf);
+                printf("\r" PROMPT "%s", buf);
             }
             esc_state = 0;
             continue;
@@ -132,6 +133,18 @@ size_t read_line(char* buf) {
 }
 
 void shell() {
+#ifdef TEST_INTERRUPT
+    /* At the begining of shell, set cpu timmer interrupt (high priority) */
+    command_fn_t fn = find_command("settimeout");
+    char* a[] = {"settimeout", "1", "1"};
+    if (fn) {
+        fn(3, a);
+    }
+
+    /* mini uart TX interrupt (low priority) */
+    printf("%s", "test interrupt\r\n");
+#endif
+
     while (1) {
         printf(PROMPT);
 

@@ -4,8 +4,21 @@ CC := $(CROSS_COMPILE)gcc
 LD := $(CROSS_COMPILE)ld
 AR := $(CROSS_COMPILE)ar
 
-COPS = -Wall -nostdlib -nostartfiles -ffreestanding -I../include -mgeneral-regs-only -g -O0
-ASMOPS = -I../include -g -O0
+COPS = -Wall -nostdlib -nostartfiles -ffreestanding -I../include -mgeneral-regs-only -O2
+ASMOPS = -I../include -O2
+
+# Process parameter
+ENABLE_DEBUG ?= 0
+ENABLE_INTERRUPT_DEBUG ?= 0 
+
+ifeq ($(ENABLE_DEBUG), 1)
+COPS += -DDEBUG -g
+ASMOPS += -DDEBUG -g
+endif
+ifeq ($(ENABLE_TEST_INTERRUPT), 1)
+COPS += -DTEST_INTERRUPT
+ASMOPS += -DTEST_INTERRUPT
+endif
 
 MAKEFILE_DIR_ABS := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 BUILD_DIR = ../build/$(notdir $(MAKEFILE_DIR_ABS))

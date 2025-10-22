@@ -4,7 +4,7 @@
 .section .rodata
 .align 3
 fmt_spsr:       .asciz "Test exception:\r\n    SPSR_EL1 = 0x%lx\r\n    ELR_EL1 = 0x%lx\r\n    ESR_EL1 = 0x%lx\r\n"
-fmt_seconds:    .asciz "Test core timmer: seconds since boot %d\r\n"
+test:           .asciz "Test\r\n"
 
 // ----------------------------
 // text
@@ -56,6 +56,7 @@ fmt_seconds:    .asciz "Test core timmer: seconds since boot %d\r\n"
     add sp, sp, #272
 .endm
 
+/* Debuger */
 .global exception_handler
 exception_handler:
     save_all
@@ -64,7 +65,7 @@ exception_handler:
     eret
 
 .global exception_entry
-.extern printf
+.extern printf_sync
 exception_entry:
     // Mask all interrupt
     msr DAIFSet, #0xf
@@ -73,62 +74,32 @@ exception_entry:
     adrp x0, fmt_spsr
     add x0, x0, :lo12:fmt_spsr
 
-    // Call printf
+    // Call printf_sync
     /* XXX: This may be slow because mini uart io. */
     mrs x1, spsr_el1
     mrs x2, elr_el1
     mrs x3, esr_el1
 
     stp x30, xzr, [sp, #-16]! //caller save registers
-    bl printf
+    // bl printf_sync
     ldp x30, xzr, [sp], #16
     ret
 
-.global irq_handler
-irq_handler:
-    // Mask all interrupt
-    /* TODO: Consider mask only one interrupt instead of all of them */
+/* Top half interrrupt handler */
+.global irq_entry
+irq_entry:
+    // Disable cpu interrupts while processing top-half
     msr DAIFSet, #0xf
 
     save_all
-
-    // Check core timer intterrupt (Core0 Interrupt Source, bit 1)
-    ldr x0, =0x40000060 // Core0 interrupt source
-    ldr w0, [x0]
-    tst w0, #(1<<1)// Check CNTPNSIRQ
-    bne timer_handler
-
-    // Check mini UART interrupt (IRQ_PENDING1, bit 29)
-    ldr x0, =0x3f00b204 // IRQ_PENDING1
-    ldr w0, [x0]
-    tst w0, #(1<<29)// check mini UART interrupt
-    bne uart_handler
-
-    b irq_exit
-
-timer_handler:
-    bl timer_interrupt_handler
-    b irq_exit
-
-uart_handler:
-    // Test UART interrupt type
-    ldr x0, =0x3f215048 // AUX_MU_IIR_REG
-    ldr w0, [x0]
-    and w1, w0, #0x6
-    cmp w1, #0x2 // TX interrupt
-    beq tx_handler
-    cmp w1, #0x4 // RX interrupt
-    beq rx_handler
-    b irq_exit
-
-tx_handler:
-    bl mini_uart_tx_handler
-    b irq_exit
-
-rx_handler:
-    bl mini_uart_rx_handler
-    b irq_exit
-
-irq_exit:
+    // Call top-half interrupt handler
+    bl irq_handler
+    
+    // Enable cpu interrupts while processing bottom-half
+    msr DAIFClr, #0xf
+    // Run bottom-half works
+    bl process_task
+    
     load_all
+
     eret

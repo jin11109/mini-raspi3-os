@@ -1,13 +1,14 @@
 #include "utils.h"
 
+#include "../kernel/taskq.h"
 #include "def.h"
 #include "mini_uart.h"
 #include "string.h"
 
 typedef void (*putchar_func_t)(const char);
-typedef void (*sendstr_func_t)(const char *);
+typedef void (*sendstr_func_t)(const char*);
 
-static void save_args(uint64_t *args) {
+static void save_args(uint64_t* args) {
     __asm__ volatile(
         "mov %0, x1\n"
         "mov %1, x2\n"
@@ -23,7 +24,7 @@ static void save_args(uint64_t *args) {
 }
 
 static void vprintf_core(putchar_func_t putchar, sendstr_func_t sendstr,
-                         const char *fmt, uint64_t *args) {
+                         const char* fmt, uint64_t* args) {
     int arg_idx = 0;
     char buf[64];
 
@@ -72,7 +73,7 @@ static void vprintf_core(putchar_func_t putchar, sendstr_func_t sendstr,
                     break;
 
                 case 's':
-                    sendstr((char *)args[arg_idx++]);
+                    sendstr((char*)args[arg_idx++]);
                     break;
 
                 case '%':
@@ -96,6 +97,7 @@ static void vprintf_core(putchar_func_t putchar, sendstr_func_t sendstr,
 char getchar() {
     char c_buf[1];
     while (1) {
+        /* TODO: consider will cpu idel, run task queue:process_task();*/
         int len = mini_uart_async_read(c_buf, 1);
         if (len == 0) {
             continue;
@@ -111,7 +113,7 @@ char getchar_sync() { return mini_uart_sync_read(); }
 
 /* Async printf. This function provides simple output through the mini
  * UART. Ensure that the number of arguments does not exceed 7.*/
-void printf(const char *fmt, ...) {
+void printf(const char* fmt, ...) {
     uint64_t args[7];
     save_args(args);
     vprintf_core(mini_uart_async_write, mini_uart_async_write_str, fmt, args);
@@ -119,7 +121,7 @@ void printf(const char *fmt, ...) {
 
 /* Sync printf. This function provides simple output through the mini
  * UART. Ensure that the number of arguments does not exceed 7 */
-void printf_sync(const char *fmt, ...) {
+void printf_sync(const char* fmt, ...) {
     uint64_t args[7];
     save_args(args);
     vprintf_core(mini_uart_sync_write, mini_uart_sync_write_str, fmt, args);

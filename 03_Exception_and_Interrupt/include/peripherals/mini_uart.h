@@ -16,7 +16,4 @@
 #define AUX_MU_STAT_REG (PBASE + 0x00215064)
 #define AUX_MU_BAUD_REG (PBASE + 0x00215068)
 
-#define IRQ_ENABLE1 (PBASE + 0x00b210)  // Interrupt Enable 1
-#define IRQ_PENDING1 (PBASE + 0x00b204) // Interrupt Pending 1
-
 #endif /*_P_MINI_UART_H */

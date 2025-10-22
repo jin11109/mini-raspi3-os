@@ -1,6 +1,6 @@
-#include "bmalloc.h"
 #include "crc.h"
 #include "def.h"
+#include "malloc.h"
 #include "mini_uart.h"
 #include "mm.h"
 #include "power.h"
@@ -10,7 +10,7 @@
 #define TIMEOUT 1000
 #define MAGIC_HEADER "IMGX"
 
-size_t zrle_decompress(const uint8_t *in, size_t in_len, uint8_t *out) {
+size_t zrle_decompress(const uint8_t* in, size_t in_len, uint8_t* out) {
     size_t i = 0, j = 0;
     while (i < in_len) {
         if (i + 2 < in_len && in[i] == 0x00 && in[i + 1] == 0x00) {
@@ -26,9 +26,9 @@ size_t zrle_decompress(const uint8_t *in, size_t in_len, uint8_t *out) {
     return j; // decompressed size
 }
 
-int load_kernel_from_uart(void *kernel_start) {
+int load_kernel_from_uart(void* kernel_start) {
     // Receive magic header
-    uint8_t magic[4];
+    uint8_t magic[4] = {};
     int tries = 0;
     while (tries++ < TIMEOUT) {
         magic[0] = magic[1];
@@ -56,7 +56,7 @@ int load_kernel_from_uart(void *kernel_start) {
     // printf_sync("Receiving %d bytes\r\n", len);
 
     // Receive payload
-    uint8_t *recv_buf = (uint8_t *)bmalloc(len + 1);
+    uint8_t* recv_buf = (uint8_t*)malloc(len + 1);
     if (recv_buf == NULL) {
         printf_sync("%c", NACK);
         printf_sync("Heap error\r\n");
@@ -75,7 +75,7 @@ int load_kernel_from_uart(void *kernel_start) {
     // Check CRC
     unsigned int calc_crc = crc32_calculate(recv_buf, len);
     if (calc_crc == recv_crc) {
-        uint8_t *dst = (uint8_t *)(kernel_start);
+        uint8_t* dst = (uint8_t*)(kernel_start);
         size_t decompressed_size = zrle_decompress(recv_buf, len, dst);
         printf_sync("%c", ACK);
         printf_sync(
@@ -96,7 +96,7 @@ void bootloader_main(uint64_t dtb_addr, uint64_t x1, uint64_t x2) {
         "ldr %2, =__kernel_blob_end\n"
         : "=r"(kernel_start), "=r"(kernel_blob_start), "=r"(kernel_blob_end));
 
-    void (*kernel_entry)(uint64_t, uint64_t, uint64_t) = (void *)kernel_start;
+    void (*kernel_entry)(uint64_t, uint64_t, uint64_t) = (void*)kernel_start;
 
     cancel_reboot();
     mini_uart_init();
@@ -141,7 +141,7 @@ void bootloader_main(uint64_t dtb_addr, uint64_t x1, uint64_t x2) {
 
         if (c == '1') {
             printf_sync("Loading kernel from mini UART...\r\n");
-            if (load_kernel_from_uart((void *)kernel_start)) {
+            if (load_kernel_from_uart((void*)kernel_start)) {
                 printf_sync("Jumping to kernel...\r\n");
                 asm volatile("dsb sy");
                 asm volatile("isb");
@@ -152,7 +152,7 @@ void bootloader_main(uint64_t dtb_addr, uint64_t x1, uint64_t x2) {
         } else if (c == '2') {
             /* relocate_kernel_blob */
             uint64_t size = kernel_blob_end - kernel_blob_start;
-            memcpy((void *)kernel_start, (void *)kernel_blob_start, size);
+            memcpy((void*)kernel_start, (void*)kernel_blob_start, size);
 
             printf_sync("Booting existing kernel...\r\n");
             asm volatile("dsb sy");
