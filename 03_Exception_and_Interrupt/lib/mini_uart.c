@@ -10,6 +10,13 @@
 #include "peripherals/intc.h"
 #include "utils.h"
 
+/* Raspi is slower than qemu, so it does't need to much loop to wait */
+#ifdef RASPI
+#define WAITINGLOOP 20000000
+#else
+#define WAITINGLOOP 2000000000
+#endif
+
 // ----------------------------
 // UART Device
 // ----------------------------
@@ -107,7 +114,7 @@ static void mini_uart_rx_bottom(uintptr_t dev) {
     enable_irq;
     /* Simulation of time consuming process */
     int sum = 0;
-    for (int i = 1; i < 2000000000; i++) {
+    for (int i = 1; i < WAITINGLOOP; i++) {
         sum += i;
     }
     disable_irq;
@@ -119,43 +126,64 @@ static void mini_uart_rx_bottom(uintptr_t dev) {
 #endif
 
 /**
- * This task only enble interrupt when it need to wait for mini uart. If it
- * successfully send all data in buffer, interrupt will be disable until mini
- * uart write api been call.
+ * This task only enble interrupt when it need to wait a long time for mini
+ * uart. If it successfully send all data in buffer, interrupt will be disable
+ * until mini uart write api been call.
  */
 static void mini_uart_tx_bottom(void* dev, void* unuse) {
     CircularBuffer* buffer = (CircularBuffer*)dev;
 #ifdef TEST_INTERRUPT
+    disable_irq;
     printf_sync("[test interrupt] (prio:low) mini uart tx bottom start\r\n");
     int sum = 0;
+    enable_irq;
 #endif
+    int try;
+    int success = 0;
     while (buffer->count > 0) {
-        if (MMIO_READ32(AUX_MU_LSR_REG) & 0x20u) {
-            MMIO_WRITE32(buffer->data[buffer->tail], AUX_MU_IO_REG);
-            buffer->tail = (buffer->tail + 1) % MINI_UART_BUFFER_SIZE;
-            buffer->count--;
-        } else {
+        success = 0;
+        /**
+         * When run in raspi3B+, tx is not always able to send data (unlike in
+         * qemu). If we don't wait a little time for tx, we found that each
+         * task will send interrupt again and no one successfully send data. So,
+         * we add a bounded wait here.
+         */
+        try = 20;
+        while (try) {
+            if (MMIO_READ32(AUX_MU_LSR_REG) & 0x20u) {
+                MMIO_WRITE32(buffer->data[buffer->tail], AUX_MU_IO_REG);
+                buffer->tail = (buffer->tail + 1) % MINI_UART_BUFFER_SIZE;
+                buffer->count--;
+                success = 1;
+                break;
+            }
+        }
+        if (success) {
 #ifdef TEST_INTERRUPT
-            printf_sync(
-                "[test interrupt] (prio:low) mini uart tx bottom end\r\n");
+            /* Simulation of time consuming process */
+            for (int i = 1; i < WAITINGLOOP; i++) {
+                sum += i;
+            }
 #endif
-            /**
-             * Need to wait for mini uart, so enable inetrrupt again (do not
-             * busy wait).
-             */
-            mini_uart_tx_unmask();
-            return;
+            continue;
         }
 #ifdef TEST_INTERRUPT
-        /* Simulation of time consuming process */
-        for (int i = 1; i < 2000000000; i++) {
-            sum += i;
-        }
+        disable_irq;
+        printf_sync("[test interrupt] (prio:low) mini uart tx bottom end\r\n");
+        enable_irq;
 #endif
+        /**
+         * Need to wait for mini uart, so enable inetrrupt again (do not
+         * busy wait).
+         */
+        mini_uart_tx_unmask();
+        return;
     }
 #ifdef TEST_INTERRUPT
+    disable_irq;
     printf_sync("[test interrupt] (prio:low) mini uart tx bottom end %d\r\n",
                 sum);
+    enable_irq;
 #endif
 }
 

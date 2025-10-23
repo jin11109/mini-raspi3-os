@@ -8,9 +8,14 @@ COPS = -Wall -nostdlib -nostartfiles -ffreestanding -I../include -mgeneral-regs-
 ASMOPS = -I../include -O2
 
 # Process parameter
+RASPI ?= 0
 ENABLE_DEBUG ?= 0
 ENABLE_INTERRUPT_DEBUG ?= 0 
 
+ifeq ($(RASPI), 1)
+COPS += -DRASPI
+ASMOPS += -DRASPI
+endif
 ifeq ($(ENABLE_DEBUG), 1)
 COPS += -DDEBUG -g
 ASMOPS += -DDEBUG -g
