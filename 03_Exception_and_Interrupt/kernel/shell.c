@@ -44,6 +44,11 @@ void execute_user_prog(void* data_ptr) {
     __asm__ volatile(
         "msr sp_el0, %0\n"
         "mov x0, #0\n"
+        /**
+         * M = 0: EL0t
+         * DAIF = 0: Enable all inettrupt
+         * NZCV = 0: Set condition flags to zero
+         */
         "msr spsr_el1, x0\n"
         "msr elr_el1, %1\n"
         "eret\n"

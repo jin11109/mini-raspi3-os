@@ -111,7 +111,5 @@ sys_write:
 
 /* TODO: Test exit number */
 sys_exit:
-    // Load user(EL0) context
-    load_all
     msr DAIFClr, #0xf
     b return_to_shell
