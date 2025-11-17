@@ -24,7 +24,7 @@ exception_vector_table:
 .align 7
 
 // EL0_64
-    b exception_handler
+    b sync_handler // SVC will fall in here
 .align 7
     b irq_entry
 .align 7

@@ -33,6 +33,11 @@ void test_user_prog() {
 }
 #endif
 
+/*
+ * Switch from EL1 to EL0 and run the user program.
+ * In EL0, issuing an SVC triggers a transition back to EL1,
+ * where the corresponding system call handler is executed.
+ */
 void execute_user_prog(void* data_ptr) {
     // char* user_stack_top = ((char*)malloc(4 * 1024)) + 4 * 1024;
     char user_stack_top[8 * 1024];
@@ -144,6 +149,10 @@ void shell() {
     /* mini uart TX interrupt (low priority) */
     printf("%s", "test interrupt\r\n");
 #endif
+
+    __asm__ volatile(
+        ".global return_to_shell\n"
+        "return_to_shell:\n");
 
     while (1) {
         printf(PROMPT);

@@ -65,18 +65,13 @@ void process_task() {
             if (irq_nesting > 1 && last_prio != TPRIO_COUNT &&
                 t.prio > last_prio)
                 printf_sync("[test interrupt] Task preempt\r\n");
+            last_prio = t.prio;
 #endif
             enable_irq;
 
             if (t.cb) ((task_cb_t)t.cb)(t.arg0, t.arg1);
             // Enalbe this interrupt
             if (t.unmask_cb) ((task_unmask_cb_t)(t.unmask_cb))();
-
-            disable_irq;
-#ifdef TEST_INTERRUPT
-            last_prio = t.prio;
-#endif
-            enable_irq;
         }
     }
 

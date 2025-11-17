@@ -40,6 +40,7 @@ kernel8_pure.img: ./kernel/linker.ld build-kernel build-lib
 	$(OBJCOPY) $(BUILD_DIR)/kernel8_pure.elf -O binary kernel8_pure.img
 
 initramfs.cpio: $(ROOTFS_FILES)
+	$(MAKE) -C rootfs/src
 	cd rootfs && find . | cpio -o -H newc > ../initramfs.cpio
 
 .PHONY: clean
@@ -49,3 +50,5 @@ clean:
 	rm -f initramfs.cpio
 	$(MAKE) -C bootloader clean
 	$(MAKE) -C kernel clean
+	
+	$(MAKE) -C rootfs/src clean

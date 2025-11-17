@@ -1,4 +1,4 @@
-.section ".text"
+.section ".text._start"
 .global _start
 _start:
     mov x0, 0
@@ -7,5 +7,5 @@ loop:
     svc 0
     cmp x0, 5
     blt loop
-hang:
-    b hang
+
+    svc 93 // exit
