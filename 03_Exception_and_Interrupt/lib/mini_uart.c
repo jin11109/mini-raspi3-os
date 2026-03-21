@@ -138,53 +138,38 @@ static void mini_uart_tx_bottom(void* dev, void* unuse) {
     int sum = 0;
     enable_irq;
 #endif
-    int try;
-    int success = 0;
-    while (buffer->count > 0) {
-        success = 0;
-        /**
-         * When run in raspi3B+, tx is not always able to send data (unlike in
-         * qemu). If we don't wait a little time for tx, we found that each
-         * task will send interrupt again and no one successfully send data. So,
-         * we add a bounded wait here.
-         */
-        try = 20;
-        while (try) {
-            if (MMIO_READ32(AUX_MU_LSR_REG) & 0x20u) {
-                MMIO_WRITE32(buffer->data[buffer->tail], AUX_MU_IO_REG);
-                buffer->tail = (buffer->tail + 1) % MINI_UART_BUFFER_SIZE;
-                buffer->count--;
-                success = 1;
-                break;
-            }
-        }
-        if (success) {
+    /**
+     * Fills the hardware FIFO (up to 8 bytes) and yields immediately once full.
+     * Strictly avoids busy-waiting (polling) in the ISR. Remaining data
+     * transmission will be driven by subsequent TX interrupts, freeing the CPU
+     * instantly for the OS scheduler.
+     */
+    while (buffer->count > 0 && (MMIO_READ32(AUX_MU_LSR_REG) & 0x20u)) {
+        MMIO_WRITE32(buffer->data[buffer->tail], AUX_MU_IO_REG);
+        buffer->tail = (buffer->tail + 1) % MINI_UART_BUFFER_SIZE;
+        buffer->count--;
 #ifdef TEST_INTERRUPT
-            /* Simulation of time consuming process */
-            for (int i = 1; i < WAITINGLOOP; i++) {
-                sum += i;
-            }
-#endif
-            continue;
+        /* Simulation of time consuming process */
+        for (int i = 1; i < WAITINGLOOP; i++) {
+            sum += i;
         }
-#ifdef TEST_INTERRUPT
-        disable_irq;
-        printf_sync("[test interrupt] (prio:low) mini uart tx bottom end\r\n");
-        enable_irq;
 #endif
-        /**
-         * Need to wait for mini uart, so enable inetrrupt again (do not
-         * busy wait).
-         */
-        mini_uart_tx_unmask();
-        return;
     }
+    /**
+     * Enable inetrrupt again.
+     */
+    if (buffer->count > 0) {
+        mini_uart_tx_unmask();
+    }
+
 #ifdef TEST_INTERRUPT
     disable_irq;
     printf_sync("[test interrupt] (prio:low) mini uart tx bottom end %d\r\n",
                 sum);
     enable_irq;
 #endif
+
+    return;
 }
 
 // ----------------------------
