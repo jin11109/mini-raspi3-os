@@ -13,9 +13,11 @@ task_node_t* taskq[TPRIO_COUNT];
 
 #ifdef TEST_INTERRUPT
 /* Number of nesting  */
-int irq_nesting = 0;
-int last_prio = TPRIO_COUNT;
+static int irq_nesting = 0;
+static int last_prio = TPRIO_COUNT;
 #endif
+
+static int is_processing = 0;
 
 void init_taskq() {
     /* Init dummy node */
@@ -44,11 +46,16 @@ static void dequeue_task(task_node_t* head) {
 }
 
 void process_task() {
-#ifdef TEST_INTERRUPT
     disable_irq;
+#ifdef TEST_INTERRUPT
     irq_nesting++;
-    enable_irq;
 #endif
+    if (is_processing) {
+        enable_irq;
+        return; 
+    }
+    is_processing = 1;
+    enable_irq;
 
     for (int i = TPRIO_COUNT - 1; i >= 0; i--) {
         while (taskq[i]->next) {
@@ -75,13 +82,14 @@ void process_task() {
         }
     }
 
-#ifdef TEST_INTERRUPT
     disable_irq;
+    is_processing = 0;
+#ifdef TEST_INTERRUPT
     /* critical seciton */
     irq_nesting--;
     if (irq_nesting != 0) {
         printf_sync("[test interrupt] Nest interrupt %d\r\n", irq_nesting);
     }
-    enable_irq;
 #endif
+    enable_irq;
 }
