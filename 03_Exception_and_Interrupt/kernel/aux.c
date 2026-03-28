@@ -14,8 +14,8 @@ void aux_init(void) {
 
 void aux_irq_handler(void* arg) {
     uint32_t iir = MMIO_READ32(AUX_MU_IIR_REG);
-
-    if (!(iir & 0x1)) {
+    int budget = 64;
+    while (!(iir & 0x1) && budget > 0) {
         switch ((iir >> 1) & 0x3) {
             case 1: // TX ready
                 mini_uart_tx_top();
@@ -24,7 +24,10 @@ void aux_irq_handler(void* arg) {
                 mini_uart_rx_top();
                 break;
             case 3: // Line status
+                MMIO_READ32(AUX_MU_LSR_REG);
                 break;
         }
+        budget--;
+        iir = MMIO_READ32(AUX_MU_IIR_REG);
     }
 }

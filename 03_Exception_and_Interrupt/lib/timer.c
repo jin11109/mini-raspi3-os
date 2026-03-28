@@ -83,15 +83,11 @@ static void timer_interrupt_handler(void* arg) {
         timer_event_t* ev = timer_queue;
         timer_queue = ev->next;
         // Call callback function
-        // ev->callback(ev->data);
-        /* TODO: do not use malloc in top half */
-        task_t* t = (task_t*)malloc(sizeof(task_t));
-        *t = (task_t){.cb = (void*)timer_bottom_handler,
-                      .arg0 = (void*)ev->callback,
-                      .arg1 = (void*)ev->data,
-                      .prio = TPRIO_HIGH,
-                      .unmask_cb = (void*)timer_unmask};
-        enqueue_task(t);
+        enqueue_task((task_t){.cb = (void*)timer_bottom_handler,
+                              .arg0 = (void*)ev->callback,
+                              .arg1 = (void*)ev->data,
+                              .prio = TPRIO_HIGH,
+                              .unmask_cb = (void*)timer_unmask});
 
         free(ev->data);
         free(ev);

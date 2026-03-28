@@ -3,6 +3,8 @@
 
 #include "def.h"
 
+#define MAX_TASKS 256
+
 typedef void (*task_cb_t)(void* arg0, void* arg1);
 typedef void (*task_unmask_cb_t)(void);
 
@@ -22,13 +24,14 @@ typedef struct {
         void* unmask_cb;
 } task_t;
 
-typedef struct task_node {
-        task_t* t;
-        struct task_node* next;
-} task_node_t;
+typedef struct {
+    task_t buffer[MAX_TASKS];
+    volatile int head;
+    volatile int tail;
+} ring_taskq_t;
 
 void init_taskq();
-void enqueue_task(task_t* t);
+void enqueue_task(task_t t);
 void process_task();
 
 #endif /* _TASKQ_H */

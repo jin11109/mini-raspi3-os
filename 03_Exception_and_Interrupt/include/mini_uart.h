@@ -11,6 +11,7 @@ void mini_uart_sync_write_str(const char* str);
 void mini_uart_flush_recv(void);
 void mini_uart_flush_send(void);
 
+// Must be 2^n
 #define MINI_UART_BUFFER_SIZE 256
 typedef struct {
         unsigned char data[MINI_UART_BUFFER_SIZE];

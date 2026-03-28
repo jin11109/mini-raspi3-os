@@ -144,9 +144,10 @@ static void mini_uart_tx_bottom(void* dev, void* unuse) {
      * transmission will be driven by subsequent TX interrupts, freeing the CPU
      * instantly for the OS scheduler.
      */
+    disable_irq;
     while (buffer->count > 0 && (MMIO_READ32(AUX_MU_LSR_REG) & 0x20u)) {
         MMIO_WRITE32(buffer->data[buffer->tail], AUX_MU_IO_REG);
-        buffer->tail = (buffer->tail + 1) % MINI_UART_BUFFER_SIZE;
+        buffer->tail = (buffer->tail + 1) & (MINI_UART_BUFFER_SIZE - 1);
         buffer->count--;
 #ifdef TEST_INTERRUPT
         /* Simulation of time consuming process */
@@ -161,6 +162,7 @@ static void mini_uart_tx_bottom(void* dev, void* unuse) {
     if (buffer->count > 0) {
         mini_uart_tx_unmask();
     }
+    enable_irq;
 
 #ifdef TEST_INTERRUPT
     disable_irq;
@@ -191,7 +193,7 @@ void mini_uart_rx_top(void) {
     /**
      * This while loop is not busy-wait. Because if rx interrupt occur, it means
      * that there are already some data. But we don't know how many bytes are
-     * there can be read. However, it is at most 16 bytes data there. So, the
+     * there can be read. However, it is at most 8 bytes data there. So, the
      * while loop is bounded.
      */
     while (MMIO_READ32(AUX_MU_LSR_REG) & 0x01u) {
@@ -199,21 +201,28 @@ void mini_uart_rx_top(void) {
         if (mini_uart_dev.rx_buf.count < MINI_UART_BUFFER_SIZE) {
             mini_uart_dev.rx_buf.data[mini_uart_dev.rx_buf.head] = c;
             mini_uart_dev.rx_buf.head =
-                (mini_uart_dev.rx_buf.head + 1) % MINI_UART_BUFFER_SIZE;
+                (mini_uart_dev.rx_buf.head + 1) & (MINI_UART_BUFFER_SIZE - 1);
             mini_uart_dev.rx_buf.count++;
         }
     }
+
+    // Piggybacking
+    while ((mini_uart_dev.tx_buf.count > 0) && (MMIO_READ32(AUX_MU_LSR_REG) & 0x20u)) {
+        unsigned char out_c = mini_uart_dev.tx_buf.data[mini_uart_dev.tx_buf.tail];
+        MMIO_WRITE32(out_c, AUX_MU_IO_REG);
+        
+        mini_uart_dev.tx_buf.tail = (mini_uart_dev.tx_buf.tail + 1) & (MINI_UART_BUFFER_SIZE - 1);
+        mini_uart_dev.tx_buf.count--;
+    }
+
 #ifdef TEST_INTERRUPT
     /* Schedule bottom-half */
-    /* TODO: do not use malloc in top half */
     /* This section is useless. Just for test now */
-    task_t* t = (task_t*)malloc(sizeof(task_t));
-    *t = (task_t){.cb = (void*)mini_uart_rx_bottom,
-                  .arg0 = (void*)&mini_uart_dev,
-                  .arg1 = (void*)NULL,
-                  .prio = TPRIO_NORMAL,
-                  .unmask_cb = (void*)mini_uart_rx_unmask};
-    enqueue_task(t);
+    enqueue_task((task_t){.cb = (void*)mini_uart_rx_bottom,
+                          .arg0 = (void*)&mini_uart_dev,
+                          .arg1 = (void*)NULL,
+                          .prio = TPRIO_NORMAL,
+                          .unmask_cb = (void*)mini_uart_rx_unmask};);
 #endif
 #ifndef TEST_INTERRUPT
     mini_uart_rx_unmask();
@@ -230,15 +239,12 @@ void mini_uart_rx_top(void) {
  */
 void mini_uart_tx_top() {
     mini_uart_tx_mask();
-    /* TODO: do not use malloc in top half */
-    task_t* t = (task_t*)malloc(sizeof(task_t));
     /* Interrupt will enable by mini uart write api */
-    *t = (task_t){.cb = (void*)mini_uart_tx_bottom,
-                  .arg0 = (void*)&(mini_uart_dev.tx_buf),
-                  .arg1 = (void*)NULL,
-                  .prio = TPRIO_LOW,
-                  .unmask_cb = (void*)NULL};
-    enqueue_task(t);
+    enqueue_task((task_t){.cb = (void*)mini_uart_tx_bottom,
+                          .arg0 = (void*)&(mini_uart_dev.tx_buf),
+                          .arg1 = (void*)NULL,
+                          .prio = TPRIO_LOW,
+                          .unmask_cb = (void*)NULL});
 }
 
 #ifdef NOUSE
@@ -265,7 +271,7 @@ void mini_uart_tx_all_in_top(void) {
         MMIO_WRITE32(mini_uart_dev.tx_buf.data[mini_uart_dev.tx_buf.tail],
                      AUX_MU_IO_REG);
         mini_uart_dev.tx_buf.tail =
-            (mini_uart_dev.tx_buf.tail + 1) % MINI_UART_BUFFER_SIZE;
+            (mini_uart_dev.tx_buf.tail + 1) & (MINI_UART_BUFFER_SIZE - 1);
         mini_uart_dev.tx_buf.count--;
     }
     /* Only when the buffer is empty, uneble tx interrupt */
@@ -307,23 +313,27 @@ char mini_uart_sync_read(void) {
 // ----------------------------
 
 void mini_uart_async_write(const char c) {
+    disable_irq;
     if (mini_uart_dev.tx_buf.count < MINI_UART_BUFFER_SIZE) {
         mini_uart_dev.tx_buf.data[mini_uart_dev.tx_buf.head] = c;
         mini_uart_dev.tx_buf.head =
-            (mini_uart_dev.tx_buf.head + 1) % MINI_UART_BUFFER_SIZE;
+            (mini_uart_dev.tx_buf.head + 1) & (MINI_UART_BUFFER_SIZE - 1);
         mini_uart_dev.tx_buf.count++;
     }
+    enable_irq;
     // Enable tx interrupt
     mini_uart_tx_unmask();
 }
 
 void mini_uart_async_write_str(const char* str) {
+    disable_irq;
     while (*str && mini_uart_dev.tx_buf.count < MINI_UART_BUFFER_SIZE) {
         mini_uart_dev.tx_buf.data[mini_uart_dev.tx_buf.head] = *str++;
         mini_uart_dev.tx_buf.head =
-            (mini_uart_dev.tx_buf.head + 1) % MINI_UART_BUFFER_SIZE;
+            (mini_uart_dev.tx_buf.head + 1) & (MINI_UART_BUFFER_SIZE - 1);
         mini_uart_dev.tx_buf.count++;
     }
+    enable_irq;
     // Enable tx interrupt
     mini_uart_tx_unmask();
 }
@@ -331,12 +341,14 @@ void mini_uart_async_write_str(const char* str) {
 /* Return number of bytes after read. */
 int mini_uart_async_read(char* buf, int size) {
     int i;
+    disable_irq;
     for (i = 0; i < size && mini_uart_dev.rx_buf.count > 0; i++) {
         buf[i] = mini_uart_dev.rx_buf.data[mini_uart_dev.rx_buf.tail];
         mini_uart_dev.rx_buf.tail =
-            (mini_uart_dev.rx_buf.tail + 1) % MINI_UART_BUFFER_SIZE;
+            (mini_uart_dev.rx_buf.tail + 1) & (MINI_UART_BUFFER_SIZE - 1);
         mini_uart_dev.rx_buf.count--;
     }
+    enable_irq;
     return i;
 }
 

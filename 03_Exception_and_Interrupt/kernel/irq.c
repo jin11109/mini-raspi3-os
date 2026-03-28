@@ -48,7 +48,7 @@ void local_irq_unregister_handler(uint32_t irq, uint32_t core) {
 /**
  * C-level IRQ entry called from exception.S (with registers saved and
  * interrupts masked)
- * Scan for finfing what interrupt occurs
+ * Scan for finding what interrupt occurs by clz
  */
 void irq_handler() {
     /* Local IRQ */
@@ -58,33 +58,36 @@ void irq_handler() {
     uint32_t basic = MMIO_READ32(IRQ_BASIC_PENDING);
 
     if (core0_irq_src) {
-        /* TODO: consider using CTX */
-        for (int i = 0; i < MAX_LOCAL_IRQ; i++) {
-            if (core0_irq_src & (1 << i)) {
-                if (local_irq_table[0][i].handler)
-                    local_irq_table[0][i].handler(local_irq_table[0][i].arg);
+        while (core0_irq_src) {
+            int i = __builtin_ctz(core0_irq_src);
+            if (local_irq_table[0][i].handler) {
+                local_irq_table[0][i].handler(local_irq_table[0][i].arg);
             }
+            core0_irq_src &= ~(1 << i);
         }
     }
 
     if (basic & (1 << 8)) { // pending1
         uint32_t pending1 = MMIO_READ32(IRQ_PENDING1);
-        for (int i = 0; i < 32; i++) {
-            if (pending1 & (1 << i)) {
-                if (irq_table[i].handler)
-                    irq_table[i].handler(irq_table[i].arg);
+        while (pending1) {
+            int i = __builtin_ctz(pending1);
+            if (irq_table[i].handler) {
+                irq_table[i].handler(irq_table[i].arg);
             }
+            pending1 &= ~(1 << i);
         }
     }
 
     if (basic & (1 << 9)) { // pending2
         uint32_t pending2 = MMIO_READ32(IRQ_PENDING2);
-        for (int i = 0; i < 32; i++) {
-            if (pending2 & (1 << i)) {
-                int irq = i + 32;
-                if (irq_table[irq].handler)
-                    irq_table[irq].handler(irq_table[irq].arg);
+
+        while (pending2) {
+            int i = __builtin_ctz(pending2);
+            int irq = i + 32;
+            if (irq_table[irq].handler) {
+                irq_table[irq].handler(irq_table[irq].arg);
             }
+            pending2 &= ~(1 << i);
         }
     }
 }
