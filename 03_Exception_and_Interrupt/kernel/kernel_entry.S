@@ -42,12 +42,11 @@ from_el2_to_el1:
     ldr x0, =__kernel_stack_top
     msr sp_el1, x0
 
-    /* TODO: Disable INT until finish all initialization */
     /**
      * 0x3c5 => M=0101 (EL1h), DAIF=1111 (interrupt disabled)
-     * 0x5   => M=0101, DAIF=0000
+     * 0x5   => M=0101, DAIF=0000 (interrupt enabled)
      */
-    mov x0, 0x5
+    mov x0, 0x3c5
     msr spsr_el2, x0
 
     msr elr_el2, lr

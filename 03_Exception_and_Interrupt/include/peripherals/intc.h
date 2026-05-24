@@ -1,6 +1,6 @@
 /* SoC interrupt controller (bcm2836-armctrl-ic) */
-#ifndef _P_INTC_H
-#define _P_INTC_H
+#ifndef _INCLUDE_PERIPHERALS_INTC_H
+#define _INCLUDE_PERIPHERALS_INTC_H
 
 #include "peripherals/base.h"
 /* Define in BCM2837-ARM-Peripherals.-.Revised.-.V2-1 7.5 Registers page 112 */
@@ -16,4 +16,4 @@
 #define DISABLE_IRQS_2 (PBASE + INTERRUPT_BASE + 0x220u)
 #define DISABLE_BASIC_IRQS (PBASE + INTERRUPT_BASE + 0x224u)
 
-#endif /*_P_INTC_H */
+#endif /*_INCLUDE_PERIPHERALS_INTC_H */

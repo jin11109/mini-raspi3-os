@@ -3,7 +3,6 @@
 #include "command_registry.h"
 #include "def.h"
 #include "malloc.h"
-#include "mm.h"
 #include "string.h"
 #include "utils.h"
 

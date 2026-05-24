@@ -1,10 +1,12 @@
-#include "crc.h"
-#include "def.h"
 #include "malloc.h"
 #include "mini_uart.h"
-#include "mm.h"
 #include "power.h"
+
+#include "crc.h"
+#include "def.h"
+#include "string.h"
 #include "utils.h"
+
 #define ACK 0x06
 #define NACK 0x15
 #define TIMEOUT 1000
@@ -23,7 +25,7 @@ size_t zrle_decompress(const uint8_t* in, size_t in_len, uint8_t* out) {
             out[j++] = in[i++];
         }
     }
-    return j; // decompressed size
+    return j;  // decompressed size
 }
 
 int load_kernel_from_uart(void* kernel_start) {

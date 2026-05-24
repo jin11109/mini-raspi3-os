@@ -1,5 +1,5 @@
-#ifndef _STRING_H
-#define _STRING_H
+#ifndef _INCLUDE_STRING_H
+#define _INCLUDE_STRING_H
 #include "def.h"
 
 int strcmp(const char* str1, const char* str2);
@@ -25,4 +25,9 @@ uint64_t atou_dec64(const char* str, size_t len);
 uint32_t atou_hex(const char* str, size_t len);
 uint64_t atou_hex64(const char* str, size_t len);
 
-#endif /*_STRING_H */
+void memzero(void* str, size_t n);
+int memcmp(const void* s1, const void* s2, size_t n);
+void memcpy(void* dst, const void* src, size_t n);
+void memset(void* str, int c, size_t n);
+
+#endif /* _INCLUDE_STRING_H */

@@ -1,5 +1,7 @@
-#ifndef _UTILS_H
-#define _UTILS_H
+#ifndef _INCLUDE_UTILS_H
+#define _INCLUDE_UTILS_H
+
+#include "def.h"
 
 /* Memory barrier */
 // system barrier : ensure write/read op order
@@ -68,4 +70,4 @@ char getchar_sync();
 /* The parameter 'alignment' should be a power of 2 */
 #define ALIGN(s, alignment) (((s) + (alignment - 1)) & ~(alignment - 1))
 
-#endif /*_UTILS_H */
+#endif /* _INCLUDE_UTILS_H */

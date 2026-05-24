@@ -1,9 +1,11 @@
-#include "../kernel/taskq.h"
+#include "kernel/taskq.h"
+
+#include "kernel/irqflags.h"
 
 #include "def.h"
-#include "irq.h"
+
 #ifdef TEST_INTERRUPT
-#include "mini_uart.h"
+#include "drivers/mini_uart.h"
 #include "utils.h"
 #endif
 
@@ -25,51 +27,51 @@ void init_taskq() {
 
 /* Fifo */
 void enqueue_task(task_t t) {
-    disable_irq;
-    
+    disable_irq();
+
     int next_tail = (taskq[t.prio].tail + 1) % MAX_TASKS;
-    
+
     // If queue is full, drop task
     if (next_tail == taskq[t.prio].head) {
-        enable_irq;
+        enable_irq();
         /* TODO: need to handle error*/
         return;
     }
-    
+
     taskq[t.prio].buffer[taskq[t.prio].tail] = t;
     taskq[t.prio].tail = next_tail;
-    
-    enable_irq;
+
+    enable_irq();
 }
 
 void process_task() {
-    disable_irq;
+    disable_irq();
 #ifdef TEST_INTERRUPT
     irq_nesting++;
 #endif
     if (is_processing) {
-        enable_irq;
-        return; 
+        enable_irq();
+        return;
     }
     is_processing = 1;
-    enable_irq;
+    enable_irq();
 
     int has_pending_task;
     do {
         has_pending_task = 0;
         for (int i = TPRIO_COUNT - 1; i >= 0; i--) {
             while (1) {
-                disable_irq;
+                disable_irq();
                 if (taskq[i].head == taskq[i].tail) {
-                    enable_irq;
-                    break; 
+                    enable_irq();
+                    break;
                 }
 
                 /**
-                 * We need to dequeue the task here instead of at the end of loop.
-                 * If a new interrupt occurs while the task is being processed, the
-                 * system call process_task() again, which could cause the same task
-                 * to run twice.
+                 * We need to dequeue the task here instead of at the end of
+                 * loop. If a new interrupt occurs while the task is being
+                 * processed, the system call process_task() again, which could
+                 * cause the same task to run twice.
                  */
                 task_t t = taskq[i].buffer[taskq[i].head];
                 taskq[i].head = (taskq[i].head + 1) % MAX_TASKS;
@@ -81,7 +83,7 @@ void process_task() {
                     printf_sync("[test interrupt] Task preempt\r\n");
                 last_prio = t.prio;
 #endif
-                enable_irq;
+                enable_irq();
 
                 if (t.cb) ((task_cb_t)t.cb)(t.arg0, t.arg1);
                 // Enalbe this interrupt
@@ -90,7 +92,7 @@ void process_task() {
         }
     } while (has_pending_task);
 
-    disable_irq;
+    disable_irq();
     is_processing = 0;
 #ifdef TEST_INTERRUPT
     /* critical seciton */
@@ -99,5 +101,5 @@ void process_task() {
         printf_sync("[test interrupt] Nest interrupt %d\r\n", irq_nesting);
     }
 #endif
-    enable_irq;
+    enable_irq();
 }

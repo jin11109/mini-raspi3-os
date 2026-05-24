@@ -1,14 +1,15 @@
+#include "drivers/mbox.h"
+
 #include "peripherals/mbox.h"
 
 #include "command_registry.h"
 #include "def.h"
-#include "mbox.h"
 #include "string.h"
 #include "utils.h"
 
 void get_hardware_info() {
     // Mailbox call will discard lower 4 bits.
-    __attribute__((aligned(16))) unsigned int mailbox[40]; // buffer 大一點
+    __attribute__((aligned(16))) unsigned int mailbox[40];
 
     // Total buffer size in bytes.
     mailbox[0] = 40 * 4;
@@ -18,10 +19,10 @@ void get_hardware_info() {
     int i = 2;
 
     // Firmware version
-    mailbox[i++] = GET_FIRMWARE_VERSION; // tag
-    mailbox[i++] = 4;                    // value buffers size
-    mailbox[i++] = TAG_REQUEST_CODE;     // tag request
-    mailbox[i++] = 0;                    // values
+    mailbox[i++] = GET_FIRMWARE_VERSION;  // tag
+    mailbox[i++] = 4;                     // value buffers size
+    mailbox[i++] = TAG_REQUEST_CODE;      // tag request
+    mailbox[i++] = 0;                     // values
 
     // Board revision
     mailbox[i++] = GET_BOARD_REVISION;
@@ -79,7 +80,7 @@ void get_hardware_info() {
                mailbox[22]);
         printf("CPU Clock : %u Hz\r\n", mailbox[26]);
         printf("CPU Temp  : %u.%u °C\r\n", mailbox[30] / 1000,
-               (mailbox[30] % 1000) / 100); // millidegree
+               (mailbox[30] % 1000) / 100);  // millidegree
     } else {
         /* TODO : This error handling should be implemented. */
         printf("Mailbox call failed\r\n");

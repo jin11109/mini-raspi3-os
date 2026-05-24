@@ -9,6 +9,7 @@ BUILD_DIR = ./build
 
 BOOTLOADER_OBJS = $(wildcard $(BUILD_DIR)/bootloader/*.o)
 KERNEL_OBJS = $(wildcard $(BUILD_DIR)/kernel/*.o)
+DRIVERS_OBJS = $(wildcard $(BUILD_DIR)/drivers/*.o)
 COMMAND_LIB := $(BUILD_DIR)/lib/libcommand.a
 # All of files in rootfs
 ROOTFS_FILES := $(shell find ./rootfs)
@@ -22,11 +23,14 @@ build-bootloader:
 .PHONY: build-kernel
 build-kernel:
 	$(MAKE) -C kernel
+.PHONY: build-drivers
+build-drivers:
+	$(MAKE) -C drivers
 .PHONY: build-lib
 build-lib:
 	$(MAKE) -C lib
 
-kernel8.img: linker.ld build-bootloader build-kernel build-lib $(BUILD_DIR)/kernel8_pure_blob.o
+kernel8.img: linker.ld build-bootloader build-kernel build-drivers build-lib $(BUILD_DIR)/kernel8_pure_blob.o
 	$(LD) -T linker.ld -Map=$(BUILD_DIR)/kernel8.map -o /dev/null $(BOOTLOADER_OBJS) $(COMMAND_LIB) $(BUILD_DIR)/kernel8_pure_blob.o
 	$(LD) -T linker.ld -o $(BUILD_DIR)/kernel8.elf $(BOOTLOADER_OBJS) $(COMMAND_LIB) $(BUILD_DIR)/kernel8_pure_blob.o
 	$(OBJCOPY) $(BUILD_DIR)/kernel8.elf -O binary kernel8.img
@@ -35,8 +39,8 @@ $(BUILD_DIR)/kernel8_pure_blob.o: kernel8_pure.img
 	$(LD) -r -b binary -o $(BUILD_DIR)/kernel8_pure_blob.o kernel8_pure.img
 
 # Build the kernel without bootloader
-kernel8_pure.img: ./kernel/linker.ld build-kernel build-lib
-	$(LD) -T ./kernel/linker.ld -o $(BUILD_DIR)/kernel8_pure.elf --whole-archive $(COMMAND_LIB) $(KERNEL_OBJS)
+kernel8_pure.img: ./kernel/linker.ld build-kernel build-drivers build-lib
+	$(LD) -T ./kernel/linker.ld -o $(BUILD_DIR)/kernel8_pure.elf --whole-archive $(COMMAND_LIB) $(KERNEL_OBJS) $(DRIVERS_OBJS)
 	$(OBJCOPY) $(BUILD_DIR)/kernel8_pure.elf -O binary kernel8_pure.img
 
 initramfs.cpio: $(ROOTFS_FILES)
@@ -50,5 +54,6 @@ clean:
 	rm -f initramfs.cpio
 	$(MAKE) -C bootloader clean
 	$(MAKE) -C kernel clean
+	$(MAKE) -C drivers clean
 	
 	$(MAKE) -C rootfs/src clean

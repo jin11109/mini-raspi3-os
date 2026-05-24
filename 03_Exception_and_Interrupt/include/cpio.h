@@ -1,5 +1,5 @@
-#ifndef _CPIO_H
-#define _CPIO_H
+#ifndef _INCLUDE_CPIO_H
+#define _INCLUDE_CPIO_H
 
 #include "def.h"
 
@@ -40,4 +40,4 @@ extern uint64_t initramfs_end;
 void init_cpio();
 void* cpio_get_executable_file(const char* name);
 
-#endif /* _CPIO_H */
+#endif /* _INCLUDE_CPIO_H */

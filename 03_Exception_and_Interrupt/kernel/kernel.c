@@ -1,13 +1,17 @@
-#include "aux.h"
-#include "cpio.h"
-#include "def.h"
 #include "fdt.h"
 #include "fdt_callback.h"
-#include "mini_uart.h"
-#include "mm.h"
 #include "shell.h"
-#include "taskq.h"
-#include "timer.h"
+
+#include "kernel/irqflags.h"
+#include "kernel/taskq.h"
+
+#include "drivers/aux.h"
+#include "drivers/mini_uart.h"
+#include "drivers/timer.h"
+
+#include "cpio.h"
+#include "def.h"
+
 #include "utils.h"
 
 #ifdef DEBUG
@@ -43,6 +47,9 @@ void kernel_main(uint64_t dtb_addr, uint64_t x1, uint64_t x2) {
     /* Init cpio */
     fdt_traverse((void*)dtb_addr, initramfs_callback);
     init_cpio();
+
+    /* After finish all initialization, enable all exception */
+    enable_all_exceptions();
 
     shell();
 }

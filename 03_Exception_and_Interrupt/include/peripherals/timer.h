@@ -1,5 +1,5 @@
-#ifndef _P_TIMER_H
-#define _P_TIMER_H
+#ifndef _INCLUDE_PERIPHERALS_TIMER_H
+#define _INCLUDE_PERIPHERALS_TIMER_H
 
 #include "peripherals/local_intc.h"
 
@@ -14,4 +14,4 @@
 /* Virtual timer (EL1 guest) */
 #define CNTVIRQ 3
 
-#endif /*_P_TIMER_H */
+#endif /*_INCLUDE_PERIPHERALS_TIMER_H */

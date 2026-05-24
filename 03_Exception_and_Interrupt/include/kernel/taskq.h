@@ -1,5 +1,5 @@
-#ifndef _TASKQ_H
-#define _TASKQ_H
+#ifndef _INCLUDE_KERNEL_TASKQ_H
+#define _INCLUDE_KERNEL_TASKQ_H
 
 #include "def.h"
 
@@ -34,4 +34,4 @@ void init_taskq();
 void enqueue_task(task_t t);
 void process_task();
 
-#endif /* _TASKQ_H */
+#endif /* _INCLUDE_KERNEL_TASKQ_H */

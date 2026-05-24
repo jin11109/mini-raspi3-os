@@ -4,6 +4,7 @@ CC := $(CROSS_COMPILE)gcc
 LD := $(CROSS_COMPILE)ld
 AR := $(CROSS_COMPILE)ar
 
+# TODO: Change GCC optimize options to O3
 COPS = -Wall -nostdlib -nostartfiles -ffreestanding -I../include -mgeneral-regs-only -O2
 ASMOPS = -I../include -O2
 
@@ -27,8 +28,11 @@ SRC_DIR = .
 SRC_C_FILES := $(wildcard $(SRC_DIR)/*.c)
 SRC_S_FILES := $(wildcard $(SRC_DIR)/*.S)
 
-OBJ_FILES := $(SRC_C_FILES:$(SRC_DIR)/%.c=$(BUILD_DIR)/%_c.o)
-OBJ_FILES += $(SRC_S_FILES:$(SRC_DIR)/%.S=$(BUILD_DIR)/%_s.o)
+C_BASENAMES := $(notdir $(SRC_C_FILES:.c=))
+S_BASENAMES := $(notdir $(SRC_S_FILES:.S=))
+
+OBJ_FILES := $(addprefix $(BUILD_DIR)/, $(addsuffix _c.o, $(C_BASENAMES)))
+OBJ_FILES += $(addprefix $(BUILD_DIR)/, $(addsuffix _s.o, $(S_BASENAMES)))
 
 all: $(OBJ_FILES)
 

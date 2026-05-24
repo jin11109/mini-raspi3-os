@@ -1,9 +1,11 @@
-#include "irq.h"
+#include "kernel/irq.h"
 
-#include "def.h"
+#include "kernel/taskq.h"
+
 #include "peripherals/intc.h"
 #include "peripherals/local_intc.h"
-#include "taskq.h"
+
+#include "def.h"
 #include "utils.h"
 
 #define MAX_IRQS 64
@@ -13,8 +15,8 @@
 typedef void (*irq_handler_t)(void* arg);
 
 typedef struct {
-        irq_handler_t handler;
-        void* arg;
+    irq_handler_t handler;
+    void* arg;
 } irq_entry_t;
 
 static irq_entry_t irq_table[MAX_IRQS];
@@ -67,7 +69,7 @@ void irq_handler() {
         }
     }
 
-    if (basic & (1 << 8)) { // pending1
+    if (basic & (1 << 8)) {  // pending1
         uint32_t pending1 = MMIO_READ32(IRQ_PENDING1);
         while (pending1) {
             int i = __builtin_ctz(pending1);
@@ -78,7 +80,7 @@ void irq_handler() {
         }
     }
 
-    if (basic & (1 << 9)) { // pending2
+    if (basic & (1 << 9)) {  // pending2
         uint32_t pending2 = MMIO_READ32(IRQ_PENDING2);
 
         while (pending2) {

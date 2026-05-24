@@ -1,5 +1,5 @@
-#ifndef _COMMAND_REGISTRY_H
-#define _COMMAND_REGISTRY_H
+#ifndef _INCLUDE_COMMAND_REGISTRY_H
+#define _INCLUDE_COMMAND_REGISTRY_H
 
 typedef void (*command_fn_t)(int argc, char **argv);
 
@@ -18,4 +18,4 @@ void list_commands(void);
     static const command_entry_t __cmd_##func \
         __attribute__((section(".command_table"), used)) = {name_str, func}
 
-#endif /* _COMMAND_REGISTRY_H */
+#endif /* _INCLUDE_COMMAND_REGISTRY_H */

@@ -1,13 +1,15 @@
-#include "peripherals/mini_uart.h"
+#include "drivers/mini_uart.h"
 
-/* TODO : Don't use kernel header file */
-#include "../kernel/irq.h"
-#include "../kernel/taskq.h"
-#include "def.h"
-#include "malloc.h"
-#include "mini_uart.h"
+#include "kernel/irq.h"
+#include "kernel/irqflags.h"
+#include "kernel/taskq.h"
+
 #include "peripherals/gpio.h"
 #include "peripherals/intc.h"
+#include "peripherals/mini_uart.h"
+
+#include "def.h"
+#include "malloc.h"
 #include "utils.h"
 
 /* Raspi is slower than qemu, so it does't need to much loop to wait */
@@ -22,8 +24,8 @@
 // ----------------------------
 
 typedef struct uart_device {
-        CircularBuffer rx_buf;
-        CircularBuffer tx_buf;
+    CircularBuffer rx_buf;
+    CircularBuffer tx_buf;
 } uart_device_t;
 static struct uart_device mini_uart_dev = {0};
 
@@ -56,10 +58,10 @@ void mini_uart_init(void) {
     unsigned int selector;
 
     selector = MMIO_READ32(GPFSEL1);
-    selector &= ~(7 << 12); // clean gpio14
-    selector |= 2 << 12;    // set alt5 for gpio14
-    selector &= ~(7 << 15); // clean gpio15
-    selector |= 2 << 15;    // set alt5 for gpio15
+    selector &= ~(7 << 12);  // clean gpio14
+    selector |= 2 << 12;     // set alt5 for gpio14
+    selector &= ~(7 << 15);  // clean gpio15
+    selector |= 2 << 15;     // set alt5 for gpio15
     MMIO_WRITE32(selector, GPFSEL1);
 
     // Remove both the pull-up and pull-down states from pins14 and pins15
@@ -69,17 +71,17 @@ void mini_uart_init(void) {
     delay(150);
     MMIO_WRITE32(0, GPPUDCLK0);
 
-    MMIO_WRITE32(1, AUX_ENABLES); // Enable mini uart (this also enables access
-                                  // to its registers)
-    MMIO_WRITE32(0, AUX_MU_CNTL_REG); // Disable auto flow control and disable
-                                      // receiver and transmitter (for now)
+    MMIO_WRITE32(1, AUX_ENABLES);  // Enable mini uart (this also enables access
+                                   // to its registers)
+    MMIO_WRITE32(0, AUX_MU_CNTL_REG);  // Disable auto flow control and disable
+                                       // receiver and transmitter (for now)
     MMIO_WRITE32(0, AUX_MU_IER_REG);  // Disable receive and transmit interrupts
     MMIO_WRITE32(3, AUX_MU_LCR_REG);  // Enable 8 bit mode
     MMIO_WRITE32(0, AUX_MU_MCR_REG);  // Set RTS line to be always high
-    MMIO_WRITE32(270, AUX_MU_BAUD_REG); // Set baud rate to 115200
+    MMIO_WRITE32(270, AUX_MU_BAUD_REG);  // Set baud rate to 115200
 
     MMIO_WRITE32(3,
-                 AUX_MU_CNTL_REG); // Finally, enable transmitter and receiver
+                 AUX_MU_CNTL_REG);  // Finally, enable transmitter and receiver
 
     // Flush RX FIFO after enabling receiver
     mini_uart_flush_send();
@@ -96,7 +98,6 @@ void mini_uart_async_init(void) {
      */
     mini_uart_rx_unmask();
 
-    /* XXX : Is this already be control in GIC? */
     // Enble mini uart interrupt
     MMIO_WRITE32_OR(1u << 29, ENABLE_IRQS_1);
 }
@@ -109,19 +110,19 @@ void mini_uart_async_init(void) {
  * or process data. */
 #ifdef TEST_INTERRUPT
 static void mini_uart_rx_bottom(uintptr_t dev) {
-    disable_irq;
+    disable_irq();
     printf_sync("[test interrupt] (prio:normal) mini uart rx bottom start\r\n");
-    enable_irq;
+    enable_irq();
     /* Simulation of time consuming process */
     int sum = 0;
     for (int i = 1; i < WAITINGLOOP; i++) {
         sum += i;
     }
-    disable_irq;
+    disable_irq();
     /* Print sum to concern that for-loop has been excuted */
     printf_sync("[test interrupt] (prio:normal) mini uart rx bottom end %d\r\n",
                 sum);
-    enable_irq;
+    enable_irq();
 }
 #endif
 
@@ -133,10 +134,10 @@ static void mini_uart_rx_bottom(uintptr_t dev) {
 static void mini_uart_tx_bottom(void* dev, void* unuse) {
     CircularBuffer* buffer = (CircularBuffer*)dev;
 #ifdef TEST_INTERRUPT
-    disable_irq;
+    disable_irq();
     printf_sync("[test interrupt] (prio:low) mini uart tx bottom start\r\n");
     int sum = 0;
-    enable_irq;
+    enable_irq();
 #endif
     /**
      * Fills the hardware FIFO (up to 8 bytes) and yields immediately once full.
@@ -144,7 +145,7 @@ static void mini_uart_tx_bottom(void* dev, void* unuse) {
      * transmission will be driven by subsequent TX interrupts, freeing the CPU
      * instantly for the OS scheduler.
      */
-    disable_irq;
+    disable_irq();
     while (buffer->count > 0 && (MMIO_READ32(AUX_MU_LSR_REG) & 0x20u)) {
         MMIO_WRITE32(buffer->data[buffer->tail], AUX_MU_IO_REG);
         buffer->tail = (buffer->tail + 1) & (MINI_UART_BUFFER_SIZE - 1);
@@ -162,13 +163,13 @@ static void mini_uart_tx_bottom(void* dev, void* unuse) {
     if (buffer->count > 0) {
         mini_uart_tx_unmask();
     }
-    enable_irq;
+    enable_irq();
 
 #ifdef TEST_INTERRUPT
-    disable_irq;
+    disable_irq();
     printf_sync("[test interrupt] (prio:low) mini uart tx bottom end %d\r\n",
                 sum);
-    enable_irq;
+    enable_irq();
 #endif
 
     return;
@@ -207,11 +208,14 @@ void mini_uart_rx_top(void) {
     }
 
     // Piggybacking
-    while ((mini_uart_dev.tx_buf.count > 0) && (MMIO_READ32(AUX_MU_LSR_REG) & 0x20u)) {
-        unsigned char out_c = mini_uart_dev.tx_buf.data[mini_uart_dev.tx_buf.tail];
+    while ((mini_uart_dev.tx_buf.count > 0) &&
+           (MMIO_READ32(AUX_MU_LSR_REG) & 0x20u)) {
+        unsigned char out_c =
+            mini_uart_dev.tx_buf.data[mini_uart_dev.tx_buf.tail];
         MMIO_WRITE32(out_c, AUX_MU_IO_REG);
-        
-        mini_uart_dev.tx_buf.tail = (mini_uart_dev.tx_buf.tail + 1) & (MINI_UART_BUFFER_SIZE - 1);
+
+        mini_uart_dev.tx_buf.tail =
+            (mini_uart_dev.tx_buf.tail + 1) & (MINI_UART_BUFFER_SIZE - 1);
         mini_uart_dev.tx_buf.count--;
     }
 
@@ -313,27 +317,27 @@ char mini_uart_sync_read(void) {
 // ----------------------------
 
 void mini_uart_async_write(const char c) {
-    disable_irq;
+    disable_irq();
     if (mini_uart_dev.tx_buf.count < MINI_UART_BUFFER_SIZE) {
         mini_uart_dev.tx_buf.data[mini_uart_dev.tx_buf.head] = c;
         mini_uart_dev.tx_buf.head =
             (mini_uart_dev.tx_buf.head + 1) & (MINI_UART_BUFFER_SIZE - 1);
         mini_uart_dev.tx_buf.count++;
     }
-    enable_irq;
+    enable_irq();
     // Enable tx interrupt
     mini_uart_tx_unmask();
 }
 
 void mini_uart_async_write_str(const char* str) {
-    disable_irq;
+    disable_irq();
     while (*str && mini_uart_dev.tx_buf.count < MINI_UART_BUFFER_SIZE) {
         mini_uart_dev.tx_buf.data[mini_uart_dev.tx_buf.head] = *str++;
         mini_uart_dev.tx_buf.head =
             (mini_uart_dev.tx_buf.head + 1) & (MINI_UART_BUFFER_SIZE - 1);
         mini_uart_dev.tx_buf.count++;
     }
-    enable_irq;
+    enable_irq();
     // Enable tx interrupt
     mini_uart_tx_unmask();
 }
@@ -341,14 +345,14 @@ void mini_uart_async_write_str(const char* str) {
 /* Return number of bytes after read. */
 int mini_uart_async_read(char* buf, int size) {
     int i;
-    disable_irq;
+    disable_irq();
     for (i = 0; i < size && mini_uart_dev.rx_buf.count > 0; i++) {
         buf[i] = mini_uart_dev.rx_buf.data[mini_uart_dev.rx_buf.tail];
         mini_uart_dev.rx_buf.tail =
             (mini_uart_dev.rx_buf.tail + 1) & (MINI_UART_BUFFER_SIZE - 1);
         mini_uart_dev.rx_buf.count--;
     }
-    enable_irq;
+    enable_irq();
     return i;
 }
 

@@ -1,5 +1,5 @@
-#ifndef _P_POWER_H
-#define _P_POWER_H
+#ifndef _INCLUDE_PERIPHERALS_POWER_H
+#define _INCLUDE_PERIPHERALS_POWER_H
 
 #include "peripherals/base.h"
 
@@ -9,4 +9,4 @@
 /* Power Management Watchdog Register */
 #define PM_WDOG (PBASE + 0x00100024)
 
-#endif /*_P_POWER_H */
+#endif /*_INCLUDE_PERIPHERALS_POWER_H */

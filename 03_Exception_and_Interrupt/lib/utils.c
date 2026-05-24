@@ -1,31 +1,26 @@
 #include "utils.h"
 
-#include "../kernel/taskq.h"
+#include "kernel/taskq.h"
+
+#include "drivers/mini_uart.h"
+
+#include "arg.h"
 #include "def.h"
-#include "mini_uart.h"
 #include "string.h"
 
 typedef void (*putchar_func_t)(const char);
 typedef void (*sendstr_func_t)(const char*);
 
-static void save_args(uint64_t* args) {
-    __asm__ volatile(
-        "mov %0, x1\n"
-        "mov %1, x2\n"
-        "mov %2, x3\n"
-        "mov %3, x4\n"
-        "mov %4, x5\n"
-        "mov %5, x6\n"
-        "mov %6, x7\n"
-        : "=r"(args[0]), "=r"(args[1]), "=r"(args[2]), "=r"(args[3]),
-          "=r"(args[4]), "=r"(args[5]), "=r"(args[6])
-        :
-        : "x1", "x2", "x3", "x4", "x5", "x6", "x7", "memory");
-}
+extern void console_putchar_default(const char c);
+extern void console_putchar_sync(const char c);
+extern void console_sendstr_default(const char* c);
+extern void console_sendstr_sync(const char* c);
+extern char console_getchar_default(void);
+extern char console_getchar_sync(void);
 
 static void vprintf_core(putchar_func_t putchar, sendstr_func_t sendstr,
-                         const char* fmt, uint64_t* args) {
-    int arg_idx = 0;
+                         const char* fmt, va_list args) {
+    // int arg_idx = 0;
     char buf[64];
 
     while (*fmt) {
@@ -38,53 +33,49 @@ static void vprintf_core(putchar_func_t putchar, sendstr_func_t sendstr,
                 fmt++;
             }
 
-            if (arg_idx >= 7) {
-                /* TODO : This error handling should be implemented. */
-                return;
-            }
-
             switch (*fmt) {
-                case 'd':
-                    if (is_long)
-                        itoa_dec64((int64_t)args[arg_idx++], buf);
-                    else
-                        itoa_dec((int32_t)args[arg_idx++], buf);
-                    sendstr(buf);
-                    break;
+            case 'd':
+                if (is_long)
+                    itoa_dec64(va_arg(args, int64_t), buf);
+                else
+                    itoa_dec(va_arg(args, int32_t), buf);
+                /* TODO: Use put char only */
+                sendstr(buf);
+                break;
 
-                case 'u':
-                    if (is_long)
-                        utoa_dec64((uint64_t)args[arg_idx++], buf);
-                    else
-                        utoa_dec((uint32_t)args[arg_idx++], buf);
-                    sendstr(buf);
-                    break;
+            case 'u':
+                if (is_long)
+                    utoa_dec64(va_arg(args, uint64_t), buf);
+                else
+                    utoa_dec(va_arg(args, uint32_t), buf);
+                sendstr(buf);
+                break;
 
-                case 'x':
-                    if (is_long)
-                        utoa_hex64((uint64_t)args[arg_idx++], buf);
-                    else
-                        utoa_hex((uint32_t)args[arg_idx++], buf);
-                    sendstr(buf);
-                    break;
+            case 'x':
+                if (is_long)
+                    utoa_hex64(va_arg(args, uint64_t), buf);
+                else
+                    utoa_hex(va_arg(args, uint32_t), buf);
+                sendstr(buf);
+                break;
 
-                case 'c':
-                    putchar((char)args[arg_idx++]);
-                    break;
+            case 'c':
+                putchar((char)va_arg(args, int32_t));
+                break;
 
-                case 's':
-                    sendstr((char*)args[arg_idx++]);
-                    break;
+            case 's':
+                sendstr((char*)va_arg(args, char*));
+                break;
 
-                case '%':
-                    putchar('%');
-                    break;
+            case '%':
+                putchar('%');
+                break;
 
-                default:
-                    putchar('%');
-                    if (is_long) putchar('l');
-                    putchar(*fmt);
-                    break;
+            default:
+                putchar('%');
+                if (is_long) putchar('l');
+                putchar(*fmt);
+                break;
             }
         } else {
             putchar(*fmt);
@@ -93,36 +84,24 @@ static void vprintf_core(putchar_func_t putchar, sendstr_func_t sendstr,
     }
 }
 
-/* Async getchar */
-char getchar() {
-    char c_buf[1];
-    while (1) {
-        /* TODO: consider will cpu idel, run task queue:process_task();*/
-        int len = mini_uart_async_read(c_buf, 1);
-        if (len == 0) {
-            continue;
-        } else {
-            break;
-        }
-    }
-    return c_buf[0];
-}
+/* Use async function as default */
+char getchar(void) { return console_getchar_default(); }
 
 /* Sync getchar */
-char getchar_sync() { return mini_uart_sync_read(); }
+char getchar_sync(void) { return console_getchar_sync(); }
 
-/* Async printf. This function provides simple output through the mini
- * UART. Ensure that the number of arguments does not exceed 7.*/
+/* Use async function as default */
 void printf(const char* fmt, ...) {
-    uint64_t args[7];
-    save_args(args);
-    vprintf_core(mini_uart_async_write, mini_uart_async_write_str, fmt, args);
+    va_list args;
+    va_start(args, fmt);
+    vprintf_core(console_putchar_default, console_sendstr_default, fmt, args);
+    va_end(args);
 }
 
-/* Sync printf. This function provides simple output through the mini
- * UART. Ensure that the number of arguments does not exceed 7 */
+/* Sync printf */
 void printf_sync(const char* fmt, ...) {
-    uint64_t args[7];
-    save_args(args);
-    vprintf_core(mini_uart_sync_write, mini_uart_sync_write_str, fmt, args);
+    va_list args;
+    va_start(args, fmt);
+    vprintf_core(console_putchar_sync, console_sendstr_sync, fmt, args);
+    va_end(args);
 }

@@ -1,5 +1,5 @@
-#ifndef _P_MBOX_H
-#define _P_MBOX_H
+#ifndef _INCLUDE_PERIPHERALS_MBOX_H
+#define _INCLUDE_PERIPHERALS_MBOX_H
 
 #include "def.h"
 #include "peripherals/base.h"
@@ -53,4 +53,4 @@
 
 int mailbox_call(unsigned int *mailbox, unsigned int channel);
 
-#endif /*_P_MBOX_H */
+#endif /*_INCLUDE_PERIPHERALS_MBOX_H */

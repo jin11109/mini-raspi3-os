@@ -1,10 +1,12 @@
+#include "shell.h"
+
+#include "drivers/mbox.h"
+#include "drivers/mini_uart.h"
+#include "drivers/power.h"
+
 #include "command_registry.h"
 #include "cpio.h"
 #include "malloc.h"
-#include "mbox.h"
-#include "mini_uart.h"
-#include "mm.h"
-#include "power.h"
 #include "string.h"
 #include "utils.h"
 
@@ -68,13 +70,13 @@ inline static void clear_line(size_t n) {
 /* Read and print the input of shell, and return input size */
 size_t read_line(char* buf) {
     int pos = 0;
-    int esc_state = 0; // 0=normal, 1=ESC, 2=ESC[
+    int esc_state = 0;  // 0=normal, 1=ESC, 2=ESC[
 
     while (1) {
         char c = getchar();
 
         if (esc_state == 0) {
-            if (c == '\x1b') { // esc
+            if (c == '\x1b') {  // esc
                 esc_state = 1;
                 continue;
             }
@@ -86,7 +88,7 @@ size_t read_line(char* buf) {
                 esc_state = 0;
             }
         } else if (esc_state == 2) {
-            if (c == 'A') { // up button
+            if (c == 'A') {  // up button
                 clear_line(pos + 1);
 
                 if (history_pos > 0) history_pos--;
@@ -96,7 +98,7 @@ size_t read_line(char* buf) {
                 pos = strlen(buf);
 
                 printf("\r" PROMPT "%s", buf);
-            } else if (c == 'B') { // down button
+            } else if (c == 'B') {  // down button
                 clear_line(pos + 1);
 
                 if (history_pos < history_count) history_pos++;

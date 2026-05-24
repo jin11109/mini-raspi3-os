@@ -5,4 +5,4 @@
 
 void* malloc(size_t size);
 
-#endif /*_BOOTLOADER_MALLOC_H*/
+#endif /* _BOOTLOADER_MALLOC_H */

@@ -1,15 +1,16 @@
 #include "malloc.h"
 
+#include "kernel/mm.h"
+
 #include "def.h"
-#include "mm.h"
+#include "string.h"
 
 extern char __kernel_heap_start, __kernel_heap_end;
 
 typedef struct mblock {
-        size_t size;
-        uint64_t is_used;
-
-} mblock_t; // 16 bytes
+    size_t size;
+    uint64_t is_used;
+} mblock_t;  // 16 bytes
 
 static char* free_ptr;
 static char is_init_malloc = 0;

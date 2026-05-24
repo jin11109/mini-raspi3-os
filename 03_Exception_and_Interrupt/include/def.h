@@ -1,5 +1,5 @@
-#ifndef _DEF_H
-#define _DEF_H
+#ifndef _INCLUDE_DEF_H
+#define _INCLUDE_DEF_H
 
 #define NULL ((void *)0)
 
@@ -17,4 +17,4 @@ typedef long int64_t;
 
 typedef unsigned long size_t;
 
-#endif /*_DEF_H */
+#endif /* _INCLUDE_DEF_H */

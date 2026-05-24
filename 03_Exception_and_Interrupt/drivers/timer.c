@@ -1,12 +1,13 @@
-#include "timer.h"
+#include "drivers/timer.h"
 
-#include "../kernel/irq.h"
-#include "../kernel/taskq.h"
+#include "kernel/irq.h"
+#include "kernel/taskq.h"
+
+#include "peripherals/timer.h"
+
 #include "command_registry.h"
 #include "def.h"
 #include "malloc.h"
-#include "mm.h"
-#include "peripherals/timer.h"
 #include "string.h"
 #include "utils.h"
 
