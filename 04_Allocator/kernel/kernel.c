@@ -1,0 +1,50 @@
+#include "setup.h"
+#include "shell.h"
+
+#include "kernel/irqflags.h"
+#include "kernel/taskq.h"
+
+#include "drivers/aux.h"
+#include "drivers/mini_uart.h"
+#include "drivers/timer.h"
+
+#include "cpio.h"
+#include "def.h"
+#include "utils.h"
+
+#ifdef DEBUG
+#define FDT_MAGIC 0xd00dfeed
+
+void verify_dtb(uintptr_t dtb_addr) {
+    uint32_t raw = *(volatile uint32_t*)dtb_addr;
+    uint32_t magic = __builtin_bswap32(raw);
+
+    if (magic == FDT_MAGIC) {
+        printf_sync("Valid FDT at 0x%lx\r\n", dtb_addr);
+    } else {
+        printf_sync("Invalid DTB magic at 0x%lx\r\n", dtb_addr);
+    }
+}
+#endif
+
+void kernel_main(uint64_t dtb_addr, uint64_t x1, uint64_t x2) {
+#ifdef DEBUG
+    verify_dtb(dtb_addr);
+#endif
+    /* Discovery */
+    setup_arch((void*)dtb_addr);
+
+    /* Software Infrastructure */
+    init_taskq();
+    init_cpio();
+
+    /* Hardware Bring-up */
+    aux_init();
+    mini_uart_async_init();
+    init_timer();
+
+    /* After finish all initialization, enable all exception */
+    enable_all_exceptions();
+
+    shell();
+}

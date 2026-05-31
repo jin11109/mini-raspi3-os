@@ -1,0 +1,34 @@
+#ifndef _INCLUDE_STRING_H
+#define _INCLUDE_STRING_H
+#include "def.h"
+
+int strcmp(const char* str1, const char* str2);
+int strncmp(const char* str1, const char* str2, size_t n);
+
+size_t strlen(const char* str);
+int strstr(const char* haystack, const char* needle);
+void strrev(char* str);
+void strncpy(char* dst, const char* src, size_t len);
+size_t split_inplace(char** buf, char* str, char delim, size_t max_substr);
+size_t count_substr(const char* str, char delim, size_t len);
+
+void itoa_dec(int32_t num, char* buf);
+void itoa_dec64(int64_t num, char* buf);
+void utoa_dec(uint32_t num, char* buf);
+void utoa_dec64(uint64_t num, char* buf);
+void utoa_hex(uint32_t num, char* buf);
+void utoa_hex64(uint64_t num, char* buf);
+
+int32_t atoi_dec(const char* str, size_t len);
+int64_t atoi_dec64(const char* str, size_t len);
+uint32_t atou_dec(const char* str, size_t len);
+uint64_t atou_dec64(const char* str, size_t len);
+uint32_t atou_hex(const char* str, size_t len);
+uint64_t atou_hex64(const char* str, size_t len);
+
+void memzero(void* str, size_t n);
+int memcmp(const void* s1, const void* s2, size_t n);
+void memcpy(void* dst, const void* src, size_t n);
+void memset(void* str, int c, size_t n);
+
+#endif /* _INCLUDE_STRING_H */
