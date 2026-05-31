@@ -3,6 +3,7 @@
 #include "def.h"
 
 int strcmp(const char* str1, const char* str2);
+int strncmp(const char* str1, const char* str2, size_t n);
 
 size_t strlen(const char* str);
 int strstr(const char* haystack, const char* needle);

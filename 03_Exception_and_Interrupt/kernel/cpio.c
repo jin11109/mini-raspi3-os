@@ -2,27 +2,39 @@
 
 #include "command_registry.h"
 #include "def.h"
+#include "fdt.h"
 #include "malloc.h"
 #include "string.h"
 #include "utils.h"
 
 /* file type mask */
-#define CPIO_MODE_IFMT 0xF000  // file type mask
-#define CPIO_MODE_IFREG 0x8000 // regular file
-#define CPIO_MODE_IFDIR 0x4000 // directory
+#define CPIO_MODE_IFMT 0xF000   // file type mask
+#define CPIO_MODE_IFREG 0x8000  // regular file
+#define CPIO_MODE_IFDIR 0x4000  // directory
 
 /* Execute bits */
-#define CPIO_MODE_IXUSR 0x0040 // owner execute
-#define CPIO_MODE_IXGRP 0x0008 // group execute
-#define CPIO_MODE_IXOTH 0x0001 // other execute
+#define CPIO_MODE_IXUSR 0x0040  // owner execute
+#define CPIO_MODE_IXGRP 0x0008  // group execute
+#define CPIO_MODE_IXOTH 0x0001  // other execute
 
 /* Convenience: any execute bit */
 #define CPIO_MODE_EXEC_ANY (CPIO_MODE_IXUSR | CPIO_MODE_IXGRP | CPIO_MODE_IXOTH)
 
 cpio_entry_t** cpio_entry = NULL;
 size_t cpio_entry_len = 0;
-uint64_t initramfs_start;
-uint64_t initramfs_end;
+uint64_t initramfs_start = 0;
+uint64_t initramfs_end = 0;
+
+void early_init_dt_scan_chosen(const char* path, const char* prop,
+                               const void* data, uint32_t len) {
+    uint32_t cell_count = len / 4;
+
+    if (strcmp(prop, "linux,initrd-start") == 0) {
+        initramfs_start = fdt_read_cells((const uint32_t*)data, cell_count);
+    } else if (strcmp(prop, "linux,initrd-end") == 0) {
+        initramfs_end = fdt_read_cells((const uint32_t*)data, cell_count);
+    }
+}
 
 void init_cpio() {
     const char* ptr = (char*)initramfs_start;
@@ -36,9 +48,9 @@ void init_cpio() {
             (const struct cpio_newc_header*)ptr;
 
         if (memcmp(hdr->c_magic, CPIO_NEWC_MAGIC, 6) != 0) {
-            printf("Invalid CPIO magic %c%c%c%c%c%c\r\n", hdr->c_magic[0],
-                   hdr->c_magic[1], hdr->c_magic[2], hdr->c_magic[3],
-                   hdr->c_magic[4], hdr->c_magic[5]);
+            printf_sync("Invalid CPIO magic %c%c%c%c%c%c\r\n", hdr->c_magic[0],
+                        hdr->c_magic[1], hdr->c_magic[2], hdr->c_magic[3],
+                        hdr->c_magic[4], hdr->c_magic[5]);
             return;
         }
 
@@ -79,7 +91,7 @@ void* cpio_get_executable_file(const char* name) {
             uint32_t type = c_mode & CPIO_MODE_IFMT;
 
             if (type == CPIO_MODE_IFDIR) {
-                printf("This is a directory\r\n");
+                printf_sync("This is a directory\r\n");
                 return NULL;
             }
 
@@ -89,7 +101,7 @@ void* cpio_get_executable_file(const char* name) {
                 }
             }
 
-            printf("This is not executable file\r\n");
+            printf_sync("This is not executable file\r\n");
             return NULL;
         }
         ptr++;
@@ -100,7 +112,7 @@ void* cpio_get_executable_file(const char* name) {
 void cmd_ls(int argc, char** argv) {
     cpio_entry_t* ptr = *cpio_entry;
     for (size_t i = 0; i < cpio_entry_len; i++) {
-        printf("%s\r\n", ptr->name);
+        printf_sync("%s\r\n", ptr->name);
         ptr++;
     }
 }
@@ -115,10 +127,10 @@ void cmd_cat(int argc, char** argv) {
         if (strcmp(argv[1], ptr->name) == 0) {
             const char* data_ptr = ptr->data;
             for (size_t j = 0; j < ptr->data_size; j++) {
-                printf("%c", *data_ptr);
+                printf_sync("%c", *data_ptr);
                 data_ptr++;
             }
-            printf("\r\n");
+            printf_sync("\r\n");
             return;
         }
         ptr++;

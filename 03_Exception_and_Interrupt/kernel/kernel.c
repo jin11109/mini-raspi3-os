@@ -1,5 +1,4 @@
-#include "fdt.h"
-#include "fdt_callback.h"
+#include "setup.h"
 #include "shell.h"
 
 #include "kernel/irqflags.h"
@@ -11,7 +10,6 @@
 
 #include "cpio.h"
 #include "def.h"
-
 #include "utils.h"
 
 #ifdef DEBUG
@@ -33,20 +31,17 @@ void kernel_main(uint64_t dtb_addr, uint64_t x1, uint64_t x2) {
 #ifdef DEBUG
     verify_dtb(dtb_addr);
 #endif
-    /* Init task queue */
-    init_taskq();
+    /* Discovery */
+    setup_arch((void*)dtb_addr);
 
-    /* TODO: put all function of devices initialization together */
-    /* Get intc device address */
-    // fdt_traverse((void *)dtb_addr, intc_callback);
-    /* Init mini uart */
+    /* Software Infrastructure */
+    init_taskq();
+    init_cpio();
+
+    /* Hardware Bring-up */
     aux_init();
     mini_uart_async_init();
-    /* Init timmer device */
     init_timer();
-    /* Init cpio */
-    fdt_traverse((void*)dtb_addr, initramfs_callback);
-    init_cpio();
 
     /* After finish all initialization, enable all exception */
     enable_all_exceptions();
